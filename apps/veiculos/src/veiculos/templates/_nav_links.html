@@ -1,0 +1,10 @@
+{% macro item(request, href, label, icon_svg, prefixo=False, badge=None, classe_extra="") %}
+{% set esta_ativo = request.url.path.startswith(href) if prefixo else request.url.path == href %}
+<a href="{{ href }}" class="nav-item {{ classe_extra }}{% if esta_ativo %} active{% endif %}">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+    {{ icon_svg | safe }}
+  </svg>
+  <span>{{ label }}</span>
+  {% if badge %}<span class="badge-alert">{{ badge }}</span>{% endif %}
+</a>
+{% endmacro %}

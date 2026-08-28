@@ -1,0 +1,59 @@
+{% extends "configuracoes_layout.html" %}
+{% block title %}Titulares{% endblock %}
+
+{% block config_content %}
+{% if erro %}<p class="text-negative text-sm mb-4">{{ erro }}</p>{% endif %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+  <!-- Formulário Criar Titular -->
+  <div>
+    <div class="bg-white p-6 rounded-xl border border-border shadow-sm">
+      <h2 class="text-lg font-medium text-ink mb-4">Add Titular</h2>
+      <form method="post" action="/configuracoes/titulares" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-muted mb-1">Nome</label>
+          <input type="text" name="nome" required class="w-full text-sm border border-border rounded-lg px-3 py-2 bg-white text-ink">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-muted mb-1">Tipo</label>
+          <select name="tipo" required class="w-full text-sm border border-border rounded-lg px-3 py-2 bg-white text-ink">
+            <option value="proprio">Próprio</option>
+            <option value="conjuge">Cônjuge</option>
+            <option value="filho">Filho</option>
+            <option value="conjunto">Conjunto / Partilhado</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-muted mb-1">Data de Nascimento <span class="text-xs font-normal opacity-70">(opcional)</span></label>
+          <input type="date" name="data_nascimento" class="w-full text-sm border border-border rounded-lg px-3 py-2 bg-white text-ink">
+        </div>
+        <button type="submit" class="btn-primary w-full">Add</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lista de Titulares -->
+  <div>
+    <div class="bg-white p-6 rounded-xl border border-border shadow-sm">
+      <h2 class="text-lg font-medium text-ink mb-4">Titulares Atuais</h2>
+      {% if titulares %}
+      <div class="space-y-3">
+        {% for titular in titulares %}
+        <div class="flex items-center justify-between p-3 border border-border rounded-lg bg-page">
+          <div>
+            <div class="font-medium text-sm text-ink">{{ titular.nome }}</div>
+            <div class="text-xs text-muted">
+              {{ titular.tipo | capitalize }}
+              {% if titular.data_nascimento %} • {{ titular.data_nascimento.strftime('%d/%m/%Y') }}{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-sm text-muted">Nenhum titular registado.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

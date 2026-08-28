@@ -1,0 +1,403 @@
+﻿<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casa, Warranties & Manutenção — AVA</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <style>
+    .aurora-mesh {
+      position: fixed;
+      top: 0; left: 0; right: 0; height: 350px;
+      background: radial-gradient(circle at 50% -20%, rgba(56, 189, 248, 0.15), rgba(16, 185, 129, 0.05) 50%, transparent 80%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body style="background: #07090e; color: #f8fafc;">
+  <div class="aurora-mesh"></div>
+
+  <!-- Header & Navigation -->
+  <header style="border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(7, 9, 14, 0.85); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 40;">
+    <div style="max-width: 1300px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #0284c7, #10b981); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+          🏠
+        </div>
+        <div>
+          <div style="font-size: 16px; font-weight: 700; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px;">
+            <span>AVA Casa & Património Físico</span>
+            <span style="font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">DL 84/2021 (3 Anos)</span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8;">Warranties de Appliances & Devices, Maintenance Periódicas & Habitação</div>
+        </div>
+      </div>
+
+      <!-- App Ecosystem Switcher -->
+      <nav style="display: flex; align-items: center; gap: 8px;">
+        <a href="http://localhost:8088/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: none; border: 1px solid rgba(255,255,255,0.06); transition: all 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='rgba(255,255,255,0.2)';" onmouseout="this.style.color='#94a3b8'; this.style.borderColor='rgba(255,255,255,0.06)';">🌐 Hub Cockpit</a>
+        <a href="http://localhost:8081/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: none; border: 1px solid rgba(255,255,255,0.06);" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#94a3b8';">💶 Finanças</a>
+        <a href="http://localhost:8082/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: none; border: 1px solid rgba(255,255,255,0.06);" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#94a3b8';">🚗 Veículos</a>
+        <a href="http://localhost:8083/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: none; border: 1px solid rgba(255,255,255,0.06);" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#94a3b8';">🩺 Saúde</a>
+        <a href="http://localhost:8084/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #38bdf8; text-decoration: none; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);">🏠 Casa</a>
+        <a href="http://localhost:8085/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: none; border: 1px solid rgba(255,255,255,0.06);" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#94a3b8';">🪪 Cidadania</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main style="max-width: 1300px; margin: 0 auto; padding: 24px; position: relative; z-index: 10;">
+
+    <!-- Top KPI Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 28px;">
+      <div class="hud-glass hud-glow-cyan" style="padding: 18px 20px;">
+        <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Appliances & Devices & Bens</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: #f8fafc;">{{ total_equipamentos }}</div>
+        <div style="font-size: 11px; color: #38bdf8; margin-top: 4px;">Inventário doméstico ativo</div>
+      </div>
+
+      <div class="hud-glass hud-glow-emerald" style="padding: 18px 20px;">
+        <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Warranties Válidas</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: #10b981;">{{ garantias_ativas }}</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Proteção legal de 3 anos ativa</div>
+      </div>
+
+      <div class="hud-glass {% if garantias_a_expirar > 0 %}hud-glow-amber{% endif %}" style="padding: 18px 20px;">
+        <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">A Expirar brevemente</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: {% if garantias_a_expirar > 0 %}#f59e0b{% else %}#94a3b8{% endif %};">{{ garantias_a_expirar }}</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">< 60 dias de cobertura</div>
+      </div>
+
+      <div class="hud-glass" style="padding: 18px 20px;">
+        <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Maintenance da Casa</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: #f8fafc;">{{ total_manutencoes }}</div>
+        <div style="font-size: 11px; color: #38bdf8; margin-top: 4px;">Próxima: Outubro 2026 (Caldeira)</div>
+      </div>
+    </div>
+
+    <!-- Section: Radar de Warranties & Appliances & Devices -->
+    <div style="margin-bottom: 36px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 700; margin: 0; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+            <span>🛡️ Radar de Warranties Legais (DL 84/2021)</span>
+          </h2>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">Todos os bens de consumo adquiridos em Portugal têm garantia legal obrigatória de 3 anos.</div>
+        </div>
+        <button onclick="document.getElementById('modal-novo-equipamento').style.display='flex'" class="btn-primary">
+          ➕ Add Equipamento
+        </button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px;">
+        {% for eq in equipamentos %}
+        <div class="hud-glass" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border-left: 4px solid {% if eq.estado_garantia == 'em_garantia' %}#10b981{% elif eq.estado_garantia == 'a_expirar' %}#f59e0b{% else %}#ef4444{% endif %};">
+          <div>
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px;">
+              <div>
+                <span style="font-size: 10px; text-transform: uppercase; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06); color: #94a3b8;">
+                  📍 {{ eq.divisao_casa }} · {{ eq.categoria }}
+                </span>
+                <h3 style="font-size: 15px; font-weight: 700; margin: 6px 0 2px 0; color: #f8fafc;">{{ eq.nome }}</h3>
+                <div style="font-size: 12px; color: #94a3b8;">
+                  {% if eq.marca %}{{ eq.marca }}{% endif %} {% if eq.modelo %}· {{ eq.modelo }}{% endif %}
+                </div>
+              </div>
+
+              <!-- Badge de Estado -->
+              <div>
+                {% if eq.estado_garantia == 'em_garantia' %}
+                  <span class="hud-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    ✓ {{ eq.dias_restantes_garantia }} dias
+                  </span>
+                {% elif eq.estado_garantia == 'a_expirar' %}
+                  <span class="hud-badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">
+                    ⚠️ Expira em {{ eq.dias_restantes_garantia }} dias
+                  </span>
+                {% else %}
+                  <span class="hud-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    Expirada
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Dados de Compra e Garantia -->
+            <div style="background: rgba(0,0,0,0.25); border-radius: 8px; padding: 10px 12px; font-size: 11px; margin-bottom: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div>
+                <span style="color: #64748b;">Comprado em:</span>
+                <div style="font-weight: 600; color: #cbd5e1;">{{ eq.data_compra or 'N/D' }}</div>
+              </div>
+              <div>
+                <span style="color: #64748b;">Válido até:</span>
+                <div style="font-weight: 600; color: #cbd5e1;">{{ eq.data_fim_garantia or 'N/D' }}</div>
+              </div>
+              <div>
+                <span style="color: #64748b;">Loja / Fornecedor:</span>
+                <div style="font-weight: 600; color: #cbd5e1;">{{ eq.fornecedor_loja or 'N/D' }}</div>
+              </div>
+              <div>
+                <span style="color: #64748b;">Valor de Compra:</span>
+                <div style="font-weight: 600; color: #38bdf8;">{% if eq.valor_compra %}{{ eq.valor_compra }} €{% else %}N/D{% endif %}</div>
+              </div>
+              {% if eq.numero_serie %}
+              <div style="grid-column: 1 / -1;">
+                <span style="color: #64748b;">Nº Série (S/N):</span>
+                <span style="font-family: monospace; color: #f8fafc; font-weight: 600;">{{ eq.numero_serie }}</span>
+              </div>
+              {% endif %}
+              {% if eq.numero_fatura %}
+              <div style="grid-column: 1 / -1;">
+                <span style="color: #64748b;">Fatura:</span>
+                <span style="color: #cbd5e1;">{{ eq.numero_fatura }}</span>
+                {% if eq.paperless_document_id %}
+                  <span style="color: #38bdf8; font-size: 10px;">(Paperless Doc #{{ eq.paperless_document_id }})</span>
+                {% endif %}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Barra de Progresso da Garantia -->
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-bottom: 4px;">
+              <span>Decurso da garantia (3 anos)</span>
+              <span>{% if eq.dias_restantes_garantia %}{{ eq.dias_restantes_garantia }} days remaining{% else %}--{% endif %}</span>
+            </div>
+            <div class="hud-progress">
+              <div class="hud-progress-bar" style="width: 65%; background: {% if eq.estado_garantia == 'em_garantia' %}#10b981{% elif eq.estado_garantia == 'a_expirar' %}#f59e0b{% else %}#ef4444{% endif %};"></div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Section: Maintenance da Casa & Habitação -->
+    <div style="margin-bottom: 36px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 700; margin: 0; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+            <span>🔧 Manutenção Periódica & Prevenção Doméstica</span>
+          </h2>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">Inspeções regulares de caldeira, climatização, gás e sistemas da casa.</div>
+        </div>
+        <button onclick="document.getElementById('modal-nova-manutencao').style.display='flex'" class="btn-primary">
+          ➕ Nova Manutenção
+        </button>
+      </div>
+
+      <div class="hud-glass" style="overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.3); color: #94a3b8; font-size: 11px; text-transform: uppercase;">
+              <th style="padding: 14px 18px;">Intervenção / Tarefa</th>
+              <th style="padding: 14px 18px;">Divisão</th>
+              <th style="padding: 14px 18px;">Periodicidade</th>
+              <th style="padding: 14px 18px;">Última Realizada</th>
+              <th style="padding: 14px 18px;">Próxima Data</th>
+              <th style="padding: 14px 18px;">Custo Estimado</th>
+              <th style="padding: 14px 18px;">Técnico / Contacto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in manutencoes %}
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)';" onmouseout="this.style.background='transparent';">
+              <td style="padding: 14px 18px; font-weight: 600; color: #f8fafc;">
+                <div>{{ m.titulo }}</div>
+                {% if m.notas %}<div style="font-size: 11px; color: #64748b; font-weight: normal;">{{ m.notas }}</div>{% endif %}
+              </td>
+              <td style="padding: 14px 18px; color: #cbd5e1;">{{ m.divisao_casa }}</td>
+              <td style="padding: 14px 18px; color: #cbd5e1;">A cada {{ m.periodicidade_meses }} meses</td>
+              <td style="padding: 14px 18px; color: #94a3b8;">{{ m.ultima_data or 'N/D' }}</td>
+              <td style="padding: 14px 18px;">
+                <span class="hud-badge" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.2);">
+                  📅 {{ m.proxima_data or 'A Agendar' }}
+                </span>
+              </td>
+              <td style="padding: 14px 18px; color: #f8fafc; font-weight: 600;">
+                {% if m.custo_estimado and m.custo_estimado > 0 %}
+                  {{ m.custo_estimado }} €
+                {% else %}
+                  <span style="color: #10b981;">0,00 € (Próprio)</span>
+                {% endif %}
+              </td>
+              <td style="padding: 14px 18px; color: #94a3b8; font-size: 12px;">{{ m.tecnico_contacto or 'N/D' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section: Contratos de Utilidades da Habitação -->
+    <div class="hud-glass" style="padding: 20px; margin-bottom: 24px;">
+      <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 12px 0; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+        <span>⚡ Fornecedores & Serviços da Casa (Rua Fonte do Linhar, 310)</span>
+      </h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 14px;">
+          <div style="font-size: 11px; color: #f59e0b; font-weight: 700; text-transform: uppercase;">Eletricidade & Gás</div>
+          <div style="font-size: 14px; font-weight: 700; margin-top: 2px;">EDP Comercial</div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Contrato: <span style="font-family: monospace; color: #fff;">160807094343</span></div>
+          <div style="font-size: 11px; color: #38bdf8; margin-top: 2px;">Débito direto mensal (~118,73 €)</div>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 14px;">
+          <div style="font-size: 11px; color: #38bdf8; font-weight: 700; text-transform: uppercase;">Água & Saneamento</div>
+          <div style="font-size: 14px; font-weight: 700; margin-top: 2px;">Águas de Gondomar / Valongo</div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Faturação mensal canalizada</div>
+          <div style="font-size: 11px; color: #10b981; margin-top: 2px;">Débito Direto SEPA</div>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 14px;">
+          <div style="font-size: 11px; color: #10b981; font-weight: 700; text-transform: uppercase;">Telecomunicações</div>
+          <div style="font-size: 14px; font-weight: 700; margin-top: 2px;">Fibra Óptica & TV</div>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Internet 1Gbps + TV + Telemóveis</div>
+          <div style="font-size: 11px; color: #38bdf8; margin-top: 2px;">Faturação eletrónica integrada</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal Novo Equipamento -->
+  <div id="modal-novo-equipamento" class="modal-overlay">
+    <div class="hud-glass" style="width: 100%; max-width: 520px; padding: 24px; background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.3);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 16px; font-weight: 700; margin: 0;">➕ Novo Equipamento / Bem Doméstico</h3>
+        <button onclick="document.getElementById('modal-novo-equipamento').style.display='none'" style="background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
+      </div>
+
+      <form action="/api/casa/equipamentos" method="POST" style="display: flex; flex-direction: column; gap: 12px;">
+        <div>
+          <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Nome do Equipamento *</label>
+          <input type="text" name="nome" required placeholder="Ex.: Smart TV OLED 65'', Frigorífico Americano" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Marca</label>
+            <input type="text" name="marca" placeholder="Ex.: LG, Bosch, Membersung" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Modelo</label>
+            <input type="text" name="modelo" placeholder="Ex.: Série 6, C3" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Divisão da Casa</label>
+            <input type="text" name="divisao_casa" value="Sala de Estar" placeholder="Sala, Cozinha, Escritório" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Categoria</label>
+            <select name="categoria" style="width: 100%; padding: 8px 12px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+              <option value="eletronica">Eletrónica / Gadgets</option>
+              <option value="eletrodomestico">Eletrodoméstico</option>
+              <option value="climatizacao">Climatização / Aquecimento</option>
+              <option value="audio_video">Áudio & Vídeo</option>
+              <option value="ferramenta">Ferramentas & Bricolage</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Data de Compra</label>
+            <input type="date" name="data_compra" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Valor de Compra (€)</label>
+            <input type="number" step="0.01" name="valor_compra" placeholder="0.00" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Loja / Fornecedor</label>
+            <input type="text" name="fornecedor_loja" placeholder="PCDIGA, Worten, Amazon" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Garantia Legal (Anos)</label>
+            <input type="number" name="anos_garantia" value="3" min="1" max="10" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Número de Série (S/N)</label>
+          <input type="text" name="numero_serie" placeholder="Ex.: SN-8492049182" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" onclick="document.getElementById('modal-novo-equipamento').style.display='none'" style="padding: 8px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #94a3b8; cursor: pointer;">Cancel</button>
+          <button type="submit" class="btn-primary">Save Equipamento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Nova Manutenção -->
+  <div id="modal-nova-manutencao" class="modal-overlay">
+    <div class="hud-glass" style="width: 100%; max-width: 500px; padding: 24px; background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.3);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 16px; font-weight: 700; margin: 0;">➕ Nova Manutenção Preventiva</h3>
+        <button onclick="document.getElementById('modal-nova-manutencao').style.display='none'" style="background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
+      </div>
+
+      <form action="/api/casa/manutencoes" method="POST" style="display: flex; flex-direction: column; gap: 12px;">
+        <div>
+          <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Título da Manutenção *</label>
+          <input type="text" name="titulo" required placeholder="Ex.: Inspeção de Rede de Gás, Pintura Exterior" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Divisão / Zona</label>
+            <input type="text" name="divisao_casa" value="Geral" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Periodicidade (Meses)</label>
+            <input type="number" name="periodicidade_meses" value="12" min="1" max="120" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Próxima Data</label>
+            <input type="date" name="proxima_data" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Custo Estimado (€)</label>
+            <input type="number" step="0.01" name="custo_estimado" placeholder="0.00" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Contacto Técnico / Empresa</label>
+          <input type="text" name="tecnico_contacto" placeholder="Ex.: Técnico Credenciado Vulcano / Tel: 91..." style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" onclick="document.getElementById('modal-nova-manutencao').style.display='none'" style="padding: 8px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #94a3b8; cursor: pointer;">Cancel</button>
+          <button type="submit" class="btn-primary">Save Manutenção</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

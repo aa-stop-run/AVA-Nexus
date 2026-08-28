@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Garagem & Frota Familiar — AVA{% endblock %}
+
+{% block content %}
+<div class="dashboard-header flex justify-between items-center mb-6">
+  <div>
+    <h1 class="page-title">Garagem</h1>
+    <p style="font-size: var(--font-xs); color: var(--c-muted); margin-top: 2px;">Gestão de viaturas, histórico de revisões, alertas de IPO e consumos.</p>
+  </div>
+  <div>
+    <button onclick="document.getElementById('modal-novo-veiculo').style.display='flex'" class="btn-primary" style="cursor: pointer;">
+      + Add Veículo
+    </button>
+  </div>
+</div>
+
+<!-- KPIs da Garagem -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+  <div class="card" style="padding: 18px 20px;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Veículos Ativos</div>
+    <div style="font-size: 26px; font-weight: 700; color: var(--c-ink);">{{ veiculos_cards|length }}</div>
+    <div style="font-size: 11px; color: var(--c-muted); margin-top: 4px;">Carros e motas da família</div>
+  </div>
+
+  <div class="card" style="padding: 18px 20px;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Kilometers Totais</div>
+    <div style="font-size: 26px; font-weight: 700; color: var(--c-ink); font-family: var(--font-mono);">{{ total_km_frota | format_pt }} km</div>
+    <div style="font-size: 11px; color: var(--c-muted); margin-top: 4px;">Odómetro acumulado da frota</div>
+  </div>
+
+  <div class="card" style="padding: 18px 20px;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: {% if total_alertas > 0 %}var(--c-negative){% else %}var(--c-muted){% endif %}; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Prazos em Alerta</div>
+    <div style="font-size: 26px; font-weight: 700; color: {% if total_alertas > 0 %}var(--c-negative){% else %}var(--c-ink){% endif %};">{{ total_alertas }}</div>
+    <div style="font-size: 11px; color: var(--c-muted); margin-top: 4px;">IPO, IUC ou seguros próximos</div>
+  </div>
+</div>
+
+<!-- Grelha de Cartões dos Veículos -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for card in veiculos_cards %}
+  {% set v = card.veiculo %}
+  {% set p = card.estado_prazos %}
+  <div class="card flex flex-col justify-between" style="padding: 20px; transition: border-color 0.2s ease;">
+    <div>
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-accent-blue); background: rgba(37, 99, 235, 0.1); padding: 2px 8px; border-radius: 4px;">
+            {% if v.tipo == 'mota' %}🏍️ Mota{% else %}🚗 Carro{% endif %}
+          </span>
+          <h2 style="font-size: 18px; font-weight: 700; color: var(--c-ink); margin-top: 8px;">{{ v.nome }}</h2>
+          <div style="font-size: 12px; color: var(--c-muted); font-family: var(--font-mono);">{{ v.matricula or 'Sem matrícula' }} • {{ v.ano_matricula or '' }}</div>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 16px; font-weight: 700; color: var(--c-ink); font-family: var(--font-mono); display: block;">{{ v.km_atual | format_pt }} km</span>
+          <span style="font-size: 11px; color: var(--c-muted); text-transform: capitalize;">{{ v.combustivel }}</span>
+        </div>
+      </div>
+
+      <!-- Alertas Rápidos de Prazos -->
+      <div style="margin: 14px 0; padding-top: 12px; border-top: 1px solid var(--c-border); font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div class="flex justify-between items-center">
+          <span style="color: var(--c-muted);">Próxima IPO:</span>
+          {% if card.data_proxima_ipo %}
+            <span style="font-weight: 600; color: {% if p.ipo_urgente %}var(--c-negative){% elif p.ipo_alerta %}var(--c-accent-amber){% else %}var(--c-ink){% endif %};">
+              {{ card.data_proxima_ipo.strftime('%d/%m/%Y') }}
+              {% if p.ipo_dias_restantes is not none and p.ipo_dias_restantes <= 60 %}
+                ({{ p.ipo_dias_restantes }}d)
+              {% endif %}
+            </span>
+          {% else %}
+            <span style="color: var(--c-muted);">N/D</span>
+          {% endif %}
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span style="color: var(--c-muted);">Mês do IUC:</span>
+          <span style="font-weight: 600; color: {% if p.iuc_mes_atual %}var(--c-negative){% else %}var(--c-ink){% endif %};">
+            {{ p.iuc_mes_nome }} {% if p.iuc_mes_atual %}(Pagar este mês!){% endif %}
+          </span>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <span style="color: var(--c-muted);">Seguro Auto:</span>
+          {% if v.seguradora or v.data_fim_seguro %}
+            <span style="font-weight: 600; color: {% if p.seguro_urgente %}var(--c-negative){% elif p.seguro_alerta %}var(--c-accent-amber){% else %}var(--c-ink){% endif %};">
+              {{ v.seguradora or 'Ativo' }}
+              {% if v.data_fim_seguro %}
+                ({{ v.data_fim_seguro.strftime('%d/%m/%Y') }})
+              {% endif %}
+            </span>
+          {% else %}
+            <span style="color: var(--c-muted);">Não registado</span>
+          {% endif %}
+        </div>
+
+        {% if card.consumo_medio %}
+        <div class="flex justify-between items-center">
+          <span style="color: var(--c-muted);">Consumo Médio:</span>
+          <span style="font-weight: 700; color: var(--c-accent-blue);">{{ card.consumo_medio | format_pt }} L/100km</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="padding-top: 14px; border-top: 1px solid var(--c-border); display: flex; gap: 8px;">
+      <a href="/veiculos/{{ v.id }}" style="flex: 1; padding: 8px 0; background: var(--bg-surface-alt); border: 1px solid var(--c-border); text-align: center; font-size: 12px; font-weight: 600; border-radius: var(--radius-md); color: var(--c-ink); text-decoration: none; transition: background 0.15s ease;">
+        Dossier & Histórico →
+      </a>
+      <form action="/veiculos/{{ v.id }}/apagar" method="post" onsubmit="return confirm('Tem a certeza que deseja apagar a viatura {{ v.nome }} ({{ v.matricula or '' }}) e todo o seu histórico?');" style="margin: 0;">
+        <button type="submit" title="Delete Viatura" style="padding: 8px 12px; background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); color: var(--c-negative); border-radius: var(--radius-md); font-size: 13px; cursor: pointer; transition: all 0.15s ease;">
+          🗑️
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Modal Novo Veículo -->
+<div id="modal-novo-veiculo" style="display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 16px;">
+  <div class="card" style="max-width: 440px; width: 100%; padding: 24px; box-shadow: var(--shadow-modal);">
+    <div class="flex justify-between items-center mb-4">
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--c-ink);">Add Novo Veículo</h3>
+      <button onclick="document.getElementById('modal-novo-veiculo').style.display='none'" style="color: var(--c-muted); cursor: pointer; border: none; background: none; font-size: 16px;">✕</button>
+    </div>
+    
+    <form action="/veiculos" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Nome / Modelo *</label>
+        <input type="text" name="nome" required placeholder="Ex.: Sedan 2.0 TDI" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Tipo</label>
+          <select name="tipo" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+            <option value="carro">Carro</option>
+            <option value="mota">Mota</option>
+            <option value="comercial">Comercial</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Fuel Type</label>
+          <select name="combustivel" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+            <option value="gasoleo">Diesel</option>
+            <option value="gasolina">Gasoline</option>
+            <option value="hibrido">Híbrido</option>
+            <option value="eletrico">Electric</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Plate</label>
+          <input type="text" name="matricula" placeholder="XX-YY-ZZ" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Ano</label>
+          <input type="number" name="ano_matricula" placeholder="2018" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Mês</label>
+          <input type="number" name="mes_matricula" min="1" max="12" placeholder="5" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Kilometers Atuais</label>
+        <input type="number" name="km_atual" value="0" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3">
+        <button type="button" onclick="document.getElementById('modal-novo-veiculo').style.display='none'" style="padding: 6px 12px; font-size: 12px; color: var(--c-muted); cursor: pointer; border: none; background: none;">Cancel</button>
+        <button type="submit" class="btn-primary" style="padding: 6px 16px; font-size: 12px; cursor: pointer;">Save Veículo</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

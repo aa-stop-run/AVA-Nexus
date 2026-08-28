@@ -1,0 +1,82 @@
+:root {
+  --bg-space: #07090e;
+  --c-card: rgba(15, 23, 42, 0.75);
+  --c-border: rgba(255, 255, 255, 0.08);
+  --c-accent: #38bdf8;
+  --c-emerald: #10b981;
+  --c-amber: #f59e0b;
+  --c-rose: #f43f5e;
+  --c-muted: #94a3b8;
+  --c-ink: #f8fafc;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--bg-space);
+  color: var(--c-ink);
+  min-height: 100vh;
+}
+
+.hud-glass {
+  background: var(--c-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+}
+
+.hud-glow-cyan {
+  box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.15);
+}
+
+.hud-glow-emerald {
+  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.15);
+}
+
+.hud-glow-amber {
+  box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.15);
+}
+
+.hud-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.hud-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.hud-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0369a1, #075985);
+  box-shadow: 0 0 15px rgba(2, 132, 199, 0.4);
+}

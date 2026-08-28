@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Alertas{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-6">Alertas</h1>
+
+<section class="card mb-6">
+  <h2 class="text-lg font-medium mb-4">Documentos por confirmar ({{ documentos|length }})</h2>
+  {% if documentos %}
+  <table class="table-clean">
+    <thead><tr><th>Documento</th><th>Nível</th><th>Motivo</th><th>Recebido</th><th></th></tr></thead>
+    <tbody>
+      {% for documento in documentos %}
+      <tr id="documento-{{ documento.id }}">
+        <td>{{ documento.paperless_document_id }}</td>
+        <td>{{ documento.nivel_extracao }}</td>
+        <td class="text-muted">{{ documento.motivo_revisao if documento.motivo_revisao else "—" }}</td>
+        <td>{{ documento.criado_em.strftime("%d/%m/%Y") }}</td>
+        <td class="text-right">
+          <button hx-post="/revisao/{{ documento.id }}/aprovar" hx-target="closest tr" hx-swap="outerHTML" class="btn-primary">Aprovar</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-muted text-sm">Nada por confirmar.</p>
+  {% endif %}
+</section>
+
+<section class="card mb-6">
+  <h2 class="text-lg font-medium mb-4">Prazos próximos ({{ obrigacoes|length }})</h2>
+  {% if obrigacoes %}
+  <table class="table-clean">
+    <thead><tr><th>Descrição</th><th>Tipo</th><th>Data limite</th><th>Dias restantes</th></tr></thead>
+    <tbody>
+      {% for item in obrigacoes %}
+      <tr>
+        <td>{{ item.obrigacao.descricao }}</td>
+        <td>{{ item.obrigacao.tipo }}</td>
+        <td>{{ item.obrigacao.data_limite.strftime("%d/%m/%Y") }}</td>
+        <td class="{% if item.dias_restantes <= 3 %}text-negative font-medium{% endif %}">{{ item.dias_restantes }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-muted text-sm">Sem prazos pendentes.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2 class="text-lg font-medium mb-4">Falhas de ingestão ({{ falhas|length }})</h2>
+  {% if falhas %}
+  <table class="table-clean">
+    <thead><tr><th>Item</th><th>Erro</th><th>Desde</th></tr></thead>
+    <tbody>
+      {% for item in falhas %}
+      <tr>
+        <td>{{ item.id }}</td>
+        <td class="text-negative">{{ (item.resultado_json or {}).get('erro', '—') }}</td>
+        <td>{{ item.criado_em.strftime("%d/%m/%Y") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-muted text-sm">Sem falhas.</p>
+  {% endif %}
+</section>
+{% endblock %}

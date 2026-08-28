@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Metas de Poupança & Objetivos{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="m-0 text-2xl font-bold text-ink">Metas de Poupança & Sinking Funds</h1>
+      <p class="text-sm text-muted mt-1">Planeie objetivos de curto e longo prazo e acompanhe o progresso do seu património.</p>
+    </div>
+    <button type="button" onclick="document.getElementById('form-nova-meta').classList.toggle('hidden')" class="btn-primary flex items-center gap-2 self-start sm:self-auto">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+      Nova Meta
+    </button>
+  </div>
+
+  <!-- Resumo Global -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="card p-4 bg-surface">
+      <div class="text-xs text-muted font-medium mb-1">Total Poupado em Metas</div>
+      <div class="text-2xl font-bold text-ink">{{ total_atual | format_pt }} €</div>
+      <div class="text-xs text-muted mt-1">De um total de {{ total_alvo | format_pt }} €</div>
+    </div>
+    <div class="card p-4 bg-surface">
+      <div class="text-xs text-muted font-medium mb-1">Progresso Global</div>
+      <div class="text-2xl font-bold text-accent">{{ pct_global | format_pt }}%</div>
+      <div class="w-full h-1.5 bg-surface-alt rounded-full overflow-hidden mt-2">
+        <div class="h-full bg-accent rounded-full" style="width: {{ pct_global }}%;"></div>
+      </div>
+    </div>
+    <div class="card p-4 bg-surface">
+      <div class="text-xs text-muted font-medium mb-1">Metas Ativas</div>
+      <div class="text-2xl font-bold text-ink">{{ progressos|length }}</div>
+      <div class="text-xs text-muted mt-1">Objetivos em acompanhamento</div>
+    </div>
+  </div>
+
+  <!-- Formulário de Criação de Meta (Colapsável) -->
+  <div id="form-nova-meta" class="card p-6 bg-surface shadow-sm hidden border-2 border-accent/30">
+    <h2 class="text-base font-bold text-ink mb-4">Criar Nova Meta de Poupança</h2>
+    <form method="post" action="/metas" class="space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">Nome do Objetivo *</label>
+          <input type="text" name="nome" placeholder="Ex.: Férias de Verão, Fundo de Emergência" required class="form-input w-full">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">Valor Alvo (€) *</label>
+          <input type="number" step="0.01" min="1" name="valor_alvo" placeholder="2000.00" required class="form-input w-full">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">Valor Já Poupado (€)</label>
+          <input type="number" step="0.01" min="0" name="valor_atual" value="0.00" class="form-input w-full">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">Data Alvo (Opcional)</label>
+          <input type="date" name="data_alvo" class="form-input w-full">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">Conta Associada (Opcional)</label>
+          <select name="conta_id" class="select-clean w-full">
+            <option value="">Nenhuma / Gerido livremente</option>
+            {% for c in contas_poupanca %}
+            <option value="{{ c.id }}">{{ c.nome }} ({{ c.instituicao }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase tracking-wider mb-1.5">Notas / Descrição</label>
+          <input type="text" name="descricao" placeholder="Detalhes adicionais" class="form-input w-full">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('form-nova-meta').classList.add('hidden')" class="btn-pill-muted">Cancel</button>
+        <button type="submit" class="btn-primary">Save Meta</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Lista de Metas -->
+  {% if progressos %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {% for p in progressos %}
+    {% include "_meta_card.html" %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card p-12 text-center text-muted bg-surface">
+    <div class="text-4xl mb-3">🎯</div>
+    <h3 class="text-base font-bold text-ink mb-1">Ainda não definiu nenhuma meta de poupança</h3>
+    <p class="text-xs text-muted max-w-md mx-auto mb-4">Crie o seu primeiro fundo de emergência, objetivo de férias ou planeamento de obras para acompanhar o seu esforço mensal.</p>
+    <button type="button" onclick="document.getElementById('form-nova-meta').classList.remove('hidden')" class="btn-primary">Criar Primeira Meta</button>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

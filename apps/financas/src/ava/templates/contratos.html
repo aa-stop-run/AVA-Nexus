@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}Contratos, Seguros & Warranties{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-8">
+  <div>
+    <h1 class="m-0">Contratos, Seguros & Warranties</h1>
+    <p class="text-sm text-muted mt-1">Gestão de apólices, fidelizações, serviços e prazos de garantia legal de equipamentos</p>
+  </div>
+  <a href="/contratos/novo" class="btn-primary flex items-center gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+    Novo Contrato / Garantia
+  </a>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-grid kpi-grid-hero mb-6">
+  <div class="kpi-card blue">
+    <div class="kpi-label">Encargo Anual em Contratos</div>
+    <div class="kpi-value blue">{{ encargo_anual | format_pt }} €</div>
+    <div class="kpi-sub">Total anualizado de seguros, telecomunicações e energia</div>
+  </div>
+
+  <div class="kpi-card {% if total_vencimentos_proximos > 0 %}amber{% else %}blue{% endif %}">
+    <div class="kpi-label">Prazos e Decisões (< 60 dias)</div>
+    <div class="kpi-value {% if total_vencimentos_proximos > 0 %}amber{% else %}blue{% endif %}">{{ total_vencimentos_proximos }}</div>
+    <div class="kpi-sub">Renovações, termos de fidelização ou garantias a expirar</div>
+  </div>
+</div>
+
+<div class="kpi-grid kpi-grid-secundaria kpi-grid-secundaria-2col mb-8">
+  <div class="kpi-card-mini positive">
+    <div class="kpi-label">Seguros & Contratos Ativos</div>
+    <div class="kpi-value positive">{{ total_seguros_contratos }}</div>
+  </div>
+
+  <div class="kpi-card-mini neutral">
+    <div class="kpi-label">Warranties Ativas de Appliances & Devices</div>
+    <div class="kpi-value neutral">{{ total_garantias }}</div>
+  </div>
+</div>
+
+<!-- SEÇÃO 1: SEGUROS E CONTRATOS RECORRENTES -->
+<div class="card mb-8">
+  <div class="section-header flex justify-between items-center mb-4">
+    <div>
+      <h2 class="section-title text-[18px]">Seguros & Contratos de Serviços</h2>
+      <p class="text-xs text-muted">Automóvel, Habitação, Saúde, Vida, Telecomunicações e Energia</p>
+    </div>
+  </div>
+
+  {% if seguros_contratos %}
+  <div class="overflow-x-auto">
+    <table class="table w-full text-sm">
+      <thead>
+        <tr>
+          <th>Contrato / Policy No.</th>
+          <th>Tipo</th>
+          <th>Titular / Bem</th>
+          <th>Entidade</th>
+          <th class="text-right">Valor</th>
+          <th>Próxima Renovação</th>
+          <th>Aviso Prévio</th>
+          <th class="text-right">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in seguros_contratos %}
+        {% set c = item.contrato %}
+        <tr>
+          <td>
+            <div class="font-medium text-text">{{ c.nome }}</div>
+            {% if c.numero_referencia %}
+            <div class="text-xs text-muted">Ref: {{ c.numero_referencia }}</div>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge badge-neutral text-xs">{{ item.tipo_label }}</span>
+          </td>
+          <td>
+            <div>{{ item.titular_nome }}</div>
+            {% if item.ativo_nome %}
+            <a href="/patrimonio/ativos/{{ c.ativo_id }}" class="text-xs text-primary hover:underline flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+              {{ item.ativo_nome }}
+            </a>
+            {% endif %}
+          </td>
+          <td>{{ item.fornecedor_nome or "—" }}</td>
+          <td class="text-right">
+            {% if c.valor %}
+              <div class="font-medium text-text">{{ c.valor | format_pt }} €</div>
+              <div class="text-xs text-muted">{{ item.periodicidade_label }} ({{ item.valor_anualizado | format_pt }} €/ano)</div>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if c.data_fim %}
+              <div class="font-medium {% if item.dias_restantes is not none and item.dias_restantes <= 30 %}text-negative font-bold{% endif %}">
+                {{ c.data_fim.strftime('%d/%m/%Y') }}
+              </div>
+              {% if item.dias_restantes is not none %}
+                <div class="text-xs text-muted">
+                  {% if item.dias_restantes < 0 %}Expirou há {{ -item.dias_restantes }} dias{% else %}Em {{ item.dias_restantes }} dias{% endif %}
+                </div>
+              {% endif %}
+            {% else %}
+              <span class="text-muted">Sem data de termo</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.data_decisao %}
+              <div class="text-xs {% if item.dias_decisao is not none and item.dias_decisao <= 15 %}text-negative font-bold{% endif %}">
+                Até {{ item.data_decisao.strftime('%d/%m/%Y') }}
+              </div>
+              <div class="text-[11px] text-muted">({{ c.dias_aviso_previo }} dias antes)</div>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="text-right">
+            <form action="/contratos/{{ c.id }}/desativar" method="POST" onsubmit="return confirm('Tens a certeza que queres desativar/arquivar este contrato?');" style="display:inline;">
+              <button type="submit" class="btn-ghost text-xs text-muted hover:text-negative" title="Desativar Contrato">
+                Arquivar
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="p-8 text-center text-muted">
+    Nenhum seguro ou contrato registado. Regista apólices automóvel, seguros da casa ou contratos de telecomunicações no botão acima.
+  </div>
+  {% endif %}
+</div>
+
+<!-- SEÇÃO 2: GARANTIAS DE EQUIPAMENTOS -->
+<div class="card">
+  <div class="section-header flex justify-between items-center mb-4">
+    <div>
+      <h2 class="section-title text-[18px]">Warranties de Appliances & Devices & Bens</h2>
+      <p class="text-xs text-muted">Acompanhamento do prazo de garantia legal (3 anos) e cobertura do fabricante</p>
+    </div>
+  </div>
+
+  {% if garantias %}
+  <div class="overflow-x-auto">
+    <table class="table w-full text-sm">
+      <thead>
+        <tr>
+          <th>Equipamento / Bem</th>
+          <th>Titular</th>
+          <th>Loja / Fornecedor</th>
+          <th>Data de Compra</th>
+          <th>Fim da Garantia</th>
+          <th>Estado da Garantia</th>
+          <th class="text-right">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in garantias %}
+        {% set c = item.contrato %}
+        <tr>
+          <td>
+            <div class="font-medium text-text">{{ c.nome }}</div>
+            {% if item.ativo_nome %}
+            <a href="/patrimonio/ativos/{{ c.ativo_id }}" class="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+              {{ item.ativo_nome }}
+            </a>
+            {% endif %}
+            {% if c.numero_referencia %}
+            <div class="text-[11px] text-muted">S/N: {{ c.numero_referencia }}</div>
+            {% endif %}
+          </td>
+          <td>{{ item.titular_nome }}</td>
+          <td>{{ item.fornecedor_nome or "—" }}</td>
+          <td>{{ c.data_inicio.strftime('%d/%m/%Y') }}</td>
+          <td>
+            {% if c.data_fim %}
+              <div class="font-medium">{{ c.data_fim.strftime('%d/%m/%Y') }}</div>
+              {% if item.dias_restantes is not none %}
+                <div class="text-xs text-muted">
+                  {% if item.dias_restantes < 0 %}Expirou há {{ -item.dias_restantes }} dias{% else %}Restam {{ item.dias_restantes }} dias{% endif %}
+                </div>
+              {% endif %}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.status_garantia == 'Valida' %}
+              <span class="badge badge-positive text-xs">Válida</span>
+            {% elif item.status_garantia == 'A expirar' %}
+              <span class="badge badge-amber text-xs font-semibold">A expirar (< 60d)</span>
+            {% else %}
+              <span class="badge badge-negative text-xs">Expirada</span>
+            {% endif %}
+          </td>
+          <td class="text-right">
+            <form action="/contratos/{{ c.id }}/desativar" method="POST" onsubmit="return confirm('Tens a certeza que queres desativar este registo de garantia?');" style="display:inline;">
+              <button type="submit" class="btn-ghost text-xs text-muted hover:text-negative">
+                Remove
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="p-8 text-center text-muted">
+    Nenhuma garantia registada. Adiciona garantias de eletrodomésticos, telemóveis, computadores ou televisões para nunca perderes um prazo de reparação gratuita.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

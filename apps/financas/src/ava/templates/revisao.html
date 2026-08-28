@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Por confirmar{% endblock %}
+{% block content %}
+<h1>Documentos por confirmar</h1>
+<table>
+  <thead><tr><th>Documento (paperless)</th><th>Nível</th><th>Recebido em</th><th></th></tr></thead>
+  <tbody>
+    {% for documento in documentos %}
+    <tr>
+      <td>{{ documento.paperless_document_id }}</td>
+      <td>{{ documento.nivel_extracao }}</td>
+      <td>{{ documento.criado_em }}</td>
+      <td>
+        <button hx-post="/revisao/{{ documento.id }}/aprovar" hx-target="closest tr" hx-swap="outerHTML">
+          Aprovar
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

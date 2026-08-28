@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Treasury Forecast & Cash-Flow{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="m-0 text-2xl font-bold text-ink flex items-center gap-2">
+        <span>🔮 Treasury Forecast Familiar</span>
+        <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">90 DIAS</span>
+      </h1>
+      <p class="text-sm text-muted mt-1">Simulação diária de tesouraria cruzando salários, crédito habitação, utilidades e impostos periódicos.</p>
+    </div>
+    <div>
+      <a href="/patrimonio" class="btn-primary text-xs" style="background: var(--bg-surface-alt); color: var(--c-ink); border: 1px solid var(--c-border); text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: 600;">
+        💶 Ver Património
+      </a>
+    </div>
+  </div>
+
+  <!-- Cartões de KPI de Liquidez -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="card p-5 bg-surface shadow-sm border border-border-light">
+      <div class="text-xs font-bold text-muted uppercase tracking-wider">Saldo Líquido Atual</div>
+      <div class="text-2xl font-black text-ink mt-1 font-mono">€ {{ "%.2f"|format(proj.saldo_atual) }}</div>
+      <div class="text-xs text-muted mt-1">Contas à ordem ativas</div>
+    </div>
+
+    <div class="card p-5 bg-surface shadow-sm border border-border-light">
+      <div class="text-xs font-bold text-muted uppercase tracking-wider">Previsão a 30 Dias</div>
+      <div class="text-2xl font-black {% if proj.saldo_30d >= proj.saldo_atual %}text-emerald-600{% else %}text-amber-600{% endif %} mt-1 font-mono">
+        € {{ "%.2f"|format(proj.saldo_30d) }}
+      </div>
+      <div class="text-xs text-muted mt-1">Após compromissos do mês</div>
+    </div>
+
+    <div class="card p-5 bg-surface shadow-sm border border-border-light">
+      <div class="text-xs font-bold text-muted uppercase tracking-wider">Previsão a 90 Dias</div>
+      <div class="text-2xl font-black {% if proj.saldo_90d >= proj.saldo_atual %}text-emerald-600{% else %}text-ink{% endif %} mt-1 font-mono">
+        € {{ "%.2f"|format(proj.saldo_90d) }}
+      </div>
+      <div class="text-xs text-muted mt-1">Trimestre consolidado</div>
+    </div>
+
+    <div class="card p-5 bg-surface shadow-sm border {% if proj.em_risco_liquidez %}border-rose-500/40 bg-rose-50/10{% else %}border-border-light{% endif %}">
+      <div class="text-xs font-bold text-muted uppercase tracking-wider">Ponto Mais Baixo (Mínimo)</div>
+      <div class="text-2xl font-black {% if proj.em_risco_liquidez %}text-rose-600{% else %}text-emerald-600{% endif %} mt-1 font-mono">
+        € {{ "%.2f"|format(proj.ponto_minimo_valor) }}
+      </div>
+      <div class="text-xs text-muted mt-1">Previsto a {{ proj.ponto_minimo_data.strftime('%d/%m/%Y') }}</div>
+    </div>
+  </div>
+
+  <!-- Alerta de Diagnóstico de Liquidez -->
+  {% if proj.em_risco_liquidez %}
+  <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
+    <span class="text-2xl">⚠️</span>
+    <div>
+      <h3 class="text-sm font-bold text-amber-800 dark:text-amber-300">Alerta de Margem de Tesouraria</h3>
+      <p class="text-xs text-amber-700 dark:text-amber-200/80 mt-0.5">
+        A projeção indica que a conta descerá abaixo da margem de segurança de € {{ "%.2f"|format(proj.margem_seguranca) }} durante {{ proj.dias_abaixo_margem }} dia(s). 
+        Recomenda-se antecipar transferências da conta poupança para os picos de pagamentos.
+      </p>
+    </div>
+  </div>
+  {% else %}
+  <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-3">
+    <span class="text-2xl">🛡️</span>
+    <div>
+      <h3 class="text-sm font-bold text-emerald-800 dark:text-emerald-300">Tesouraria Familiar Saudável</h3>
+      <p class="text-xs text-emerald-700 dark:text-emerald-200/80 mt-0.5">
+        O teu saldo previsto mantém-se confortavelmente acima da margem de segurança de € {{ "%.2f"|format(proj.margem_seguranca) }} ao longo de todos os próximos 90 dias.
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Gráfico de Curva de Tesouraria (Chart.js) -->
+  <div class="card p-6 bg-surface shadow-sm border border-border-light">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-base font-bold text-ink">Evolução Projetada do Saldo (€)</h2>
+        <p class="text-xs text-muted">Projeção diária com impacto de salários, créditos e despesas fixas.</p>
+      </div>
+      <div class="flex items-center gap-3 text-xs font-mono">
+        <span class="flex items-center gap-1 text-emerald-600"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Saldo</span>
+        <span class="flex items-center gap-1 text-rose-500"><span class="w-2.5 h-0.5 bg-rose-500"></span> Margem Mínima (500€)</span>
+      </div>
+    </div>
+    <div style="height: 320px; position: relative;">
+      <canvas id="chart-tesouraria"></canvas>
+    </div>
+  </div>
+
+  <!-- Tabela de Grandes Compromissos Previstos (>= 100€) -->
+  <div class="card p-6 bg-surface shadow-sm border border-border-light">
+    <div class="mb-4">
+      <h2 class="text-base font-bold text-ink">Grandes Saídas Previstas nos Próximos 90 Dias (≥ 100 €)</h2>
+      <p class="text-xs text-muted">Compromissos contratuais, créditos, seguros e impostos programados.</p>
+    </div>
+
+    {% if proj.grandes_compromissos %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs border-collapse">
+        <thead>
+          <tr class="border-b border-border-light text-muted uppercase tracking-wider">
+            <th class="pb-2.5 font-bold">Data</th>
+            <th class="pb-2.5 font-bold">Descrição / Fornecedor</th>
+            <th class="pb-2.5 font-bold">Categoria</th>
+            <th class="pb-2.5 font-bold">Tipo</th>
+            <th class="pb-2.5 font-bold text-right">Montante Previsto</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border-light/60 font-mono">
+          {% for e in proj.grandes_compromissos %}
+          <tr class="hover:bg-surface-alt/50 transition-colors">
+            <td class="py-2.5 font-bold text-ink">{{ e.data.strftime('%d/%m/%Y') }}</td>
+            <td class="py-2.5 text-ink font-sans">{{ e.descricao }}</td>
+            <td class="py-2.5"><span class="px-2 py-0.5 rounded bg-surface-alt border border-border-light text-[11px]">{{ e.categoria }}</span></td>
+            <td class="py-2.5 uppercase text-[10px] text-muted">{{ e.tipo }}</td>
+            <td class="py-2.5 text-right font-bold text-rose-600">€ {{ "%.2f"|format(e.valor|abs) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-xs text-muted py-4">Nenhum compromisso individual superior a 100 € detetado para o período.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const labels = {{ chart_labels | safe }};
+    const dataPoints = {{ chart_values | safe }};
+    const ctx = document.getElementById('chart-tesouraria');
+    if (!ctx) return;
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Saldo Estimado (€)',
+            data: dataPoints,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 1,
+            pointHoverRadius: 5,
+          },
+          {
+            label: 'Margem de Segurança (500 €)',
+            data: Array(labels.length).fill(500),
+            borderColor: '#f43f5e',
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            fill: false,
+            pointRadius: 0,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => ` ${context.dataset.label}: € ${context.parsed.y.toLocaleString('pt-PT', {minimumFractionDigits: 2})}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { maxTicksLimit: 12, font: { size: 10, family: 'monospace' } }
+          },
+          y: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: {
+              font: { size: 10, family: 'monospace' },
+              callback: (val) => '€ ' + val.toLocaleString('pt-PT')
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

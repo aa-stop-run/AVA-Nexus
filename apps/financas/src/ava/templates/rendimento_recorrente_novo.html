@@ -1,0 +1,59 @@
+{% extends "configuracoes_layout.html" %}
+{% block title %}Novo movimento recorrente{% endblock %}
+{% block config_content %}
+<h1 class="text-2xl font-semibold mb-6">Novo movimento recorrente</h1>
+{% if erro %}<p class="text-negative text-sm mb-4">{{ erro }}</p>{% endif %}
+<div class="card max-w-lg">
+  <form method="post" action="/rendimentos-recorrentes/novo" class="space-y-4">
+    <label class="block text-sm">Titular
+      <select name="titular_id" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+        {% for titular in titulares %}
+        <option value="{{ titular.id }}">{{ titular.nome }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="block text-sm">Conta (opcional)
+      <select name="conta_id" class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+        <option value="">— nenhuma —</option>
+        {% for conta in contas %}
+        <option value="{{ conta.id }}">{{ conta.nome }} ({{ conta.instituicao }})</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="block text-sm">Tipo
+      <select name="tipo" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+        <option value="entrada">Entrada</option>
+        <option value="saida">Saída</option>
+      </select>
+    </label>
+    <label class="block text-sm">Categoria
+      <select name="categoria_id" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+        {% for grupo, categorias in categorias_receita %}
+        <optgroup label="Receita — {{ grupo.nome }}">
+          {% for categoria in categorias %}
+          <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+          {% endfor %}
+        </optgroup>
+        {% endfor %}
+        {% for grupo, categorias in categorias_despesa %}
+        <optgroup label="Despesa — {{ grupo.nome }}">
+          {% for categoria in categorias %}
+          <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+          {% endfor %}
+        </optgroup>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="block text-sm">Valor (€)
+      <input type="text" name="valor" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    <label class="block text-sm">Dia do mês
+      <input type="number" name="dia_do_mes" min="1" max="31" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    <label class="block text-sm">Descrição (opcional)
+      <input type="text" name="descricao" class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    <button type="submit" class="btn-primary">Save</button>
+  </form>
+</div>
+{% endblock %}

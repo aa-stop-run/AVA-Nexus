@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% from "_cartao_registo.html" import cartao %}
+{% block title %}Movimentos por resolver{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-2">
+  <h1 class="m-0">Movimentos por resolver</h1>
+</div>
+<p class="text-[13px] text-muted mb-6">Cada movimento é resolvido à parte — mesmo que pareça igual a outro, categorizar um não afeta os restantes.</p>
+
+{% set filtro_ativo = filtros_form.busca or filtros_form.valor_min or filtros_form.valor_max or filtros_form.data_inicio or filtros_form.data_fim or filtros_form.mes_ano or filtros_form.tipo_movimento %}
+<details class="filtros-painel" {% if filtro_ativo %}open{% endif %}>
+  <summary class="filtros-resumo">
+    <span>Filtros</span>
+    {% if filtro_ativo %}<span class="badge-count">ativos</span>{% endif %}
+  </summary>
+  <div class="card mt-3">
+    <form method="get" action="/movimentos" class="flex flex-wrap items-end gap-3">
+      <label class="text-sm">
+        <span class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">Mês/Ano</span>
+        <input type="month" name="mes_ano" value="{{ filtros_form.mes_ano }}">
+      </label>
+      <label class="text-sm">
+        <span class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">Tipo</span>
+        <select name="tipo_movimento" class="select-clean">
+          <option value="">Todos</option>
+          <option value="saida" {% if filtros_form.tipo_movimento == 'saida' %}selected{% endif %}>Despesas</option>
+          <option value="entrada" {% if filtros_form.tipo_movimento == 'entrada' %}selected{% endif %}>Receitas</option>
+        </select>
+      </label>
+      <label class="text-sm">
+        <span class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">Procurar</span>
+        <input
+          type="text" name="busca" value="{{ filtros_form.busca }}" placeholder="Descrição…"
+          class="w-48"
+        >
+      </label>
+      <label class="text-sm">
+        <span class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">Valor Mín.</span>
+        <input
+          type="number" step="0.01" name="valor_min" value="{{ filtros_form.valor_min }}"
+          class="w-24"
+        >
+      </label>
+      <label class="text-sm">
+        <span class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">Valor Máx.</span>
+        <input
+          type="number" step="0.01" name="valor_max" value="{{ filtros_form.valor_max }}"
+          class="w-24"
+        >
+      </label>
+      <label class="text-sm">
+        <span class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">De</span>
+        <input type="date" name="data_inicio" value="{{ filtros_form.data_inicio }}">
+      </label>
+      <label class="text-sm">
+        <span class="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">Até</span>
+        <input type="date" name="data_fim" value="{{ filtros_form.data_fim }}">
+      </label>
+      <button type="submit" class="btn-primary" style="padding-top: 8px; padding-bottom: 8px;">Filtrar</button>
+      {% if filtro_ativo %}
+      <a href="/movimentos" class="text-[13px] text-muted hover:text-ink font-medium transition-colors ml-2 mb-2">Limpar filtros</a>
+      {% endif %}
+    </form>
+  </div>
+</details>
+
+{% if transferencias %}
+<section class="mb-10">
+  <div class="section-header">
+    <h2 class="section-title text-[16px] flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-accent"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+      Transferências por categorizar
+    </h2>
+  </div>
+  <p class="text-[13px] text-muted mb-4">
+    Saídas de dinheiro via transferência (poupança, pagamentos de crédito, etc.) que ainda não têm categoria.
+  </p>
+  <div class="space-y-3">
+    {% for t in transferencias %}
+    {% call cartao(titulo=t.conta_nome, meta=(t.quantidade|string) + " movimento(s)", valor=(t.total | format_pt) + " €", valor_classe=("text-positive" if t.total > 0 else "text-negative"), id_attr="transf-" + loop.index|string) %}
+    <form hx-target="#transf-{{ loop.index }}" hx-swap="outerHTML">
+      <div class="cartao-registo-campos">
+        <label class="cartao-registo-campo">
+          <span>Categoria</span>
+          <select name="categoria_id" required class="select-clean" style="width:100%;">
+            <option value="" disabled selected>Escolher categoria…</option>
+            {% for cat_grupo, categorias in categorias_despesa %}
+            <optgroup label="{{ cat_grupo.nome }}">
+              {% for categoria in categorias %}
+              <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+              {% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+      <div class="cartao-registo-acoes">
+        <button type="submit" hx-post="/movimentos/{{ t.movimento_id }}/transferencia" class="btn-pill-negative">Categorizar</button>
+        <button type="submit" hx-post="/movimentos/{{ t.linha_id }}/ignorar" formnovalidate class="btn-pill-muted">Ignorar</button>
+      </div>
+    </form>
+    {% endcall %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section>
+  <div class="section-header">
+    <h2 class="section-title text-[16px] flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-accent"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" /></svg>
+      Movimentos por categorizar
+    </h2>
+  </div>
+  <p class="text-[13px] text-muted mb-4">
+    Cada movimento é resolvido individualmente — é o que permite atribuir cada despesa ao bem certo.
+  </p>
+
+  {% if entradas %}
+  <div class="space-y-3">
+    {% for grupo in entradas %}
+    {% call cartao(titulo=grupo.descricao, meta=grupo.data.strftime('%d/%m/%Y'), valor=(grupo.valor | format_pt) + " €", valor_classe=("text-positive" if grupo.tipo == "entrada" else "text-negative"), id_attr="grupo-" + loop.index|string) %}
+    <form hx-target="#grupo-{{ loop.index }}" hx-swap="outerHTML">
+      <div class="cartao-registo-campos">
+        {% if grupo.is_manual %}
+        <label class="cartao-registo-campo">
+          <span>Conta</span>
+          <select name="conta_id" required class="select-clean" style="width:100%;">
+            <option value="" disabled {% if not grupo.conta_id %}selected{% endif %}>Conta…</option>
+            {% for conta in contas_transferencia %}
+            <option value="{{ conta.id }}" {% if grupo.conta_id and conta.id == grupo.conta_id %}selected{% endif %}>{{ conta.nome }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        {% endif %}
+        <label class="cartao-registo-campo">
+          <span>Ativo (opcional)</span>
+          <select name="ativo_id" class="select-clean" style="width:100%;">
+            <option value="" selected>Nenhum</option>
+            {% for a in ativos %}
+            <option value="{{ a.id }}">{{ a.nome }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="cartao-registo-campo">
+          <span>Categoria</span>
+          <select name="categoria_id" required class="select-clean" style="width:100%;"
+                  hx-get="/movimentos/outlier-check" hx-trigger="change"
+                  hx-target="#outlier-hint-{{ loop.index }}" hx-swap="innerHTML"
+                  hx-vals='{"valor": "{{ grupo.valor }}"}'>
+            <option value="" disabled selected>Categoria…</option>
+            {% if grupo.tipo == 'saida' %}
+              {% for cat_grupo, categorias in categorias_despesa %}
+              <optgroup label="{{ cat_grupo.nome }}">
+                {% for categoria in categorias %}
+                <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                {% endfor %}
+              </optgroup>
+              {% endfor %}
+            {% else %}
+              {% for cat_grupo, categorias in categorias_receita %}
+              <optgroup label="{{ cat_grupo.nome }}">
+                {% for categoria in categorias %}
+                <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                {% endfor %}
+              </optgroup>
+              {% endfor %}
+            {% endif %}
+          </select>
+          <div id="outlier-hint-{{ loop.index }}"></div>
+        </label>
+      </div>
+      <div class="cartao-registo-acoes">
+        {% if grupo.is_manual %}
+        <button type="submit" hx-post="/movimentos/manual/{{ grupo.movimento_id }}/categorizar" class="{% if grupo.tipo == 'saida' %}btn-pill-negative{% else %}btn-pill-positive{% endif %}">Categorizar</button>
+        {% else %}
+        <button type="submit" hx-post="/movimentos/{{ grupo.linha_id }}/{% if grupo.tipo == 'saida' %}despesa{% else %}rendimento{% endif %}" class="{% if grupo.tipo == 'saida' %}btn-pill-negative{% else %}btn-pill-positive{% endif %}">Categorizar</button>
+        <button type="submit" hx-post="/movimentos/{{ grupo.linha_id }}/ignorar" formnovalidate class="btn-pill-muted">Ignorar</button>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if not grupo.is_manual %}
+    <form hx-post="/movimentos/{{ grupo.linha_id }}/transferencia_manual" hx-target="#grupo-{{ loop.index }}" hx-swap="outerHTML" class="cartao-registo-acoes-secundarias">
+      <select name="conta_relacionada_id" required class="select-clean" style="width:100%;">
+        <option value="" disabled selected>Transferência para/de…</option>
+        {% for conta in contas_transferencia %}
+        <option value="{{ conta.id }}">{{ conta.nome }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-pill-transfer">Transferir</button>
+    </form>
+    {% endif %}
+    {% endcall %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card flex items-center justify-center p-12 bg-surface">
+    <div class="text-center">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-positive-bg text-positive mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+      </div>
+      <p class="font-medium text-ink">Tudo organizado!</p>
+      <p class="text-[13px] text-muted mt-1">Não há movimentos pendentes para os filtros atuais.</p>
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}

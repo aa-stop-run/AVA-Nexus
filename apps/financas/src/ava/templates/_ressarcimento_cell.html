@@ -1,0 +1,15 @@
+<form id="ressarcimento-cell-{{ movimento_id }}"
+      hx-post="/movimentos/{{ movimento_id }}/ressarcimento"
+      hx-target="#ressarcimento-cell-{{ movimento_id }}" hx-swap="outerHTML"
+      class="inline-block mr-2">
+  <select name="ressarcimento_id" class="select-clean" style="max-width: 200px"
+          onchange="this.form.requestSubmit()">
+    <option value="">Sem ressarcimento</option>
+    <option value="novo" {% if ressarcimento_id_atual and ressarcimento_id_atual not in ressarcimentos_disponiveis|map(attribute='0.id')|list %}selected{% endif %}>+ Novo grupo</option>
+    {% for grupo, resumo in ressarcimentos_disponiveis %}
+    <option value="{{ grupo.id }}" {% if ressarcimento_id_atual == grupo.id %}selected{% endif %}>
+      {{ grupo.criado_em.strftime("%d/%m") }} — {{ resumo.n_despesas }} despesa(s) {{ resumo.despesas | format_pt }}€, reembolsos {{ resumo.reembolsos | format_pt }}€
+    </option>
+    {% endfor %}
+  </select>
+</form>

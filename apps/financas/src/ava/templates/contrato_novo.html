@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Novo Contrato, Seguro ou Garantia{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="flex items-center gap-2 mb-6">
+    <a href="/contratos" class="text-sm text-muted hover:text-text flex items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+      Voltar a Contratos
+    </a>
+  </div>
+
+  <div class="card">
+    <h1 class="section-title text-[20px] mb-2">Registar Contrato, Seguro ou Garantia</h1>
+    <p class="text-sm text-muted mb-6">Acompanha prazos de fidelização, apólices de seguros, serviços e períodos de garantia de equipamentos.</p>
+
+    <form action="/contratos/novo" method="POST" class="space-y-4">
+      <div>
+        <label for="nome" class="form-label font-medium block mb-1">Nome / Designação *</label>
+        <input type="text" id="nome" name="nome" required placeholder="Ex: Seguro Automóvel Tranquilidade, MEO Fibra, Garantia Frigorífico LG" class="input w-full">
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="tipo" class="form-label font-medium block mb-1">Tipo de Contrato *</label>
+          <select id="tipo" name="tipo" required class="input w-full" onchange="aoMudarTipo(this.value)">
+            {% for k, v in tipo_labels.items() %}
+              <option value="{{ k }}" {% if k == selected_tipo %}selected{% endif %}>{{ v }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label for="titular_id" class="form-label font-medium block mb-1">Titular Responsável *</label>
+          <select id="titular_id" name="titular_id" required class="input w-full">
+            {% for t in titulares %}
+              <option value="{{ t.id }}">{{ t.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="ativo_id" class="form-label font-medium block mb-1">Bem / Ativo Associado (Opcional)</label>
+          <select id="ativo_id" name="ativo_id" class="input w-full">
+            <option value="">— Nenhum bem específico —</option>
+            {% for a in ativos %}
+              <option value="{{ a.id }}" {% if selected_ativo_id and selected_ativo_id == a.id|string %}selected{% endif %}>
+                {{ a.nome }} ({{ a.tipo }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label for="fornecedor_id" class="form-label font-medium block mb-1">Entidade / Companhia (Opcional)</label>
+          <select id="fornecedor_id" name="fornecedor_id" class="input w-full">
+            <option value="">— Selecionar fornecedor —</option>
+            {% for f in fornecedores %}
+              <option value="{{ f.id }}">{{ f.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label for="numero_referencia" class="form-label font-medium block mb-1">Nº de Policy No. / Contrato / Nº Série (Opcional)</label>
+        <input type="text" id="numero_referencia" name="numero_referencia" placeholder="Ex: Policy No. nº 987654321 / Nº Cliente 12345" class="input w-full">
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="data_inicio" class="form-label font-medium block mb-1">Data de Início / Compra *</label>
+          <input type="date" id="data_inicio" name="data_inicio" required value="{{ hoje }}" class="input w-full">
+        </div>
+
+        <div>
+          <label for="data_fim" class="form-label font-medium block mb-1">Data de Término / Renovação / Fim Garantia</label>
+          <input type="date" id="data_fim" name="data_fim" class="input w-full">
+          <span class="text-xs text-muted">Para garantias: normalmente 3 anos após a compra</span>
+        </div>
+      </div>
+
+      <div id="secao-valores" class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-surface-subtle rounded-lg border border-border">
+        <div>
+          <label for="valor" class="form-label font-medium block mb-1">Valor do Prémio / Mensalidade (€)</label>
+          <input type="text" id="valor" name="valor" placeholder="Ex: 24,90 ou 285.00" class="input w-full">
+        </div>
+
+        <div>
+          <label for="periodicidade" class="form-label font-medium block mb-1">Periodicidade</label>
+          <select id="periodicidade" name="periodicidade" class="input w-full">
+            {% for k, v in periodicidade_labels.items() %}
+              <option value="{{ k }}">{{ v }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+        <div>
+          <label for="dias_aviso_previo" class="form-label font-medium block mb-1">Aviso Prévio (Dias antes do fim)</label>
+          <input type="number" id="dias_aviso_previo" name="dias_aviso_previo" value="30" min="0" max="365" class="input w-full">
+          <span class="text-xs text-muted">Gera alerta de decisão para rescisão ou renegociação</span>
+        </div>
+
+        <div class="pt-4">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="renovacao_automatica" name="renovacao_automatica" value="true" checked class="checkbox">
+            <span class="text-sm font-medium">Renovação Automática / Tácita</span>
+          </label>
+          <span class="text-xs text-muted block ml-6">Desmarca se o contrato cessa na data de fim (ex: garantia)</span>
+        </div>
+      </div>
+
+      <div>
+        <label for="notas" class="form-label font-medium block mb-1">Notas / Coberturas / Contactos de Assistência</label>
+        <textarea id="notas" name="notas" rows="3" placeholder="Ex: Franquia de 100€ em quebra de vidros; assistência em viagem 800 123 456" class="input w-full"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-4 border-t border-border">
+        <a href="/contratos" class="btn-ghost">Cancel</a>
+        <button type="submit" class="btn-primary">Save Contrato</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function aoMudarTipo(tipo) {
+  var checkRenovacao = document.getElementById('renovacao_automatica');
+  var periodicidade = document.getElementById('periodicidade');
+  var dtInicio = document.getElementById('data_inicio').value;
+  var dtFim = document.getElementById('data_fim');
+
+  if (tipo === 'garantia') {
+    checkRenovacao.checked = false;
+    periodicidade.value = 'unica';
+    if (dtInicio && !dtFim.value) {
+      // 3 anos pela lei de garantia
+      var d = new Date(dtInicio);
+      d.setFullYear(d.getFullYear() + 3);
+      dtFim.value = d.toISOString().split('T')[0];
+    }
+  } else if (tipo.startsWith('seguro_')) {
+    checkRenovacao.checked = true;
+    if (periodicidade.value === 'unica') periodicidade.value = 'anual';
+    if (dtInicio && !dtFim.value) {
+      var d = new Date(dtInicio);
+      d.setFullYear(d.getFullYear() + 1);
+      dtFim.value = d.toISOString().split('T')[0];
+    }
+  }
+}
+document.addEventListener("DOMContentLoaded", function() {
+  aoMudarTipo(document.getElementById('tipo').value);
+});
+</script>
+{% endblock %}

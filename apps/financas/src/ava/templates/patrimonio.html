@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% from "_celula_saldo.html" import celula_saldo %}
+{% from "_cartao_registo.html" import cartao %}
+{% block title %}Património{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-8">
+  <h1 class="m-0">Património</h1>
+  <div class="flex gap-2">
+    <a href="/ativos/novo" class="btn-primary" style="background: var(--c-surface); color: var(--c-text); border: 1px solid var(--c-border);">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+      Novo ativo
+    </a>
+    <a href="/contas/novo" class="btn-primary">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+      Nova conta
+    </a>
+  </div>
+</div>
+
+<div class="kpi-grid kpi-grid-hero">
+  <div class="kpi-card blue">
+    <div class="kpi-label">Património Total</div>
+    <div class="kpi-value blue">{{ patrimonio_total | format_pt }} €</div>
+    <div class="kpi-sub">Inclui {{ total_bens | format_pt }} € em bens</div>
+  </div>
+
+  <div class="kpi-card blue">
+    <div class="kpi-label">Património Financeiro</div>
+    <div class="kpi-value blue">{{ patrimonio_financeiro | format_pt }} €</div>
+    <div class="kpi-sub">Só saldos de contas, sem estimativas</div>
+  </div>
+</div>
+
+<div class="kpi-grid kpi-grid-secundaria kpi-grid-secundaria-2col">
+  <div class="kpi-card-mini positive">
+    <div class="kpi-label">Total de Ativos</div>
+    <div class="kpi-value positive">{{ total_ativos | format_pt }} €</div>
+  </div>
+
+  <div class="kpi-card-mini negative">
+    <div class="kpi-label">Total de Dívidas</div>
+    <div class="kpi-value negative">{{ total_dividas | format_pt }} €</div>
+  </div>
+</div>
+
+<div class="card mt-8">
+  <div class="section-header">
+    <h2 class="section-title">Evolução do Património</h2>
+  </div>
+  <div class="chart-container" style="height: 240px;">
+    <canvas id="grafico-patrimonio"></canvas>
+  </div>
+</div>
+
+<div class="dashboard-grid dashboard-grid-equal mt-8">
+
+  <!-- ATIVOS -->
+  <div class="space-y-6">
+    <div class="section-header">
+      <h2 class="section-title text-[16px]">Ativos e Contas</h2>
+    </div>
+
+    {% if contas_simples %}
+    <div class="card">
+      <div class="section-header mb-2"><h3 class="font-medium text-sm text-muted uppercase tracking-wider">Contas à Ordem e Poupança</h3></div>
+      <div class="space-y-3">
+        {% for linha in contas_simples %}
+        {% call cartao(titulo=linha.conta.nome, meta=linha.conta.instituicao, valor=celula_saldo(linha.derivado), id_attr="conta-simples-" + linha.conta.id|string) %}
+        <a href="/patrimonio/contas/{{ linha.conta.id }}" class="cartao-registo-link-cobertura" aria-label="Ver movimentos de {{ linha.conta.nome }}"></a>
+        {% endcall %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% for grupo in investimentos %}
+    <div class="card">
+      <div class="section-header mb-2"><h3 class="font-medium text-sm text-muted uppercase tracking-wider">{{ grupo.categoria }}</h3></div>
+      <div class="space-y-3">
+        {% for linha in grupo.linhas %}
+        {% call cartao(titulo=linha.conta.nome, meta=linha.conta.instituicao, valor=celula_saldo(linha.derivado), id_attr="investimento-" + linha.conta.id|string) %}
+        <a href="/patrimonio/contas/{{ linha.conta.id }}" class="cartao-registo-link-cobertura" aria-label="Ver movimentos de {{ linha.conta.nome }}"></a>
+        {% endcall %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if ativos_fisicos %}
+    <div class="card">
+      <div class="section-header mb-2"><h3 class="font-medium text-sm text-muted uppercase tracking-wider">Ativos Físicos</h3></div>
+      <div class="space-y-3">
+        {% for item in ativos_fisicos %}
+        {% if item.valor is none %}
+        {% call cartao(titulo=item.ativo.nome, meta=item.ativo.tipo|capitalize, valor="Sem avaliação", valor_classe="text-muted", id_attr="ativo-fisico-" + item.ativo.id|string) %}
+        <a href="/patrimonio/ativos/{{ item.ativo.id }}" class="cartao-registo-link-cobertura" aria-label="Ver detalhe de {{ item.ativo.nome }}"></a>
+        {% endcall %}
+        {% else %}
+        {% set sub = "estimado" if item.e_projetado else ("avaliado em " + item.data_observacao.strftime('%d/%m/%Y')) %}
+        {% call cartao(titulo=item.ativo.nome, meta=item.ativo.tipo|capitalize, valor=(item.valor | format_pt) + " €", sub_valor=sub, id_attr="ativo-fisico-" + item.ativo.id|string) %}
+        <a href="/patrimonio/ativos/{{ item.ativo.id }}" class="cartao-registo-link-cobertura" aria-label="Ver detalhe de {{ item.ativo.nome }}"></a>
+        {% endcall %}
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- DÍVIDAS -->
+  <div class="space-y-6">
+    <div class="section-header">
+      <h2 class="section-title text-[16px]">Dívidas e Créditos</h2>
+    </div>
+
+    {% for grupo in creditos %}
+    <div class="card border-t-[3px] border-t-negative">
+      <div class="section-header mb-2"><h3 class="font-medium text-sm text-muted uppercase tracking-wider">{{ grupo.categoria }}</h3></div>
+      <div class="space-y-3">
+        {% for linha in grupo.linhas %}
+        {% call cartao(titulo=linha.conta.nome, meta=linha.conta.instituicao, valor=celula_saldo(linha.derivado), valor_classe="text-negative", id_attr="credito-" + linha.conta.id|string) %}
+        <a href="/patrimonio/contas/{{ linha.conta.id }}" class="cartao-registo-link-cobertura" aria-label="Ver movimentos de {{ linha.conta.nome }}"></a>
+        {% endcall %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if not creditos %}
+    <div class="card flex items-center justify-center p-8 bg-surface">
+      <p class="text-muted text-sm flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-positive"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+        Nenhuma dívida registada.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+  // Gráfico de Património -- lê os tokens de tema em vez de cores fixas, para não desentoar
+  // do resto da app nem ficar ilegível no escuro (o mesmo padrão já usado no gráfico do
+  // dashboard).
+  const estiloPatrimonio = getComputedStyle(document.documentElement);
+  const corAcentoP = estiloPatrimonio.getPropertyValue('--c-accent').trim();
+  const corMutedP = estiloPatrimonio.getPropertyValue('--c-text-muted').trim();
+  const corGrelhaP = estiloPatrimonio.getPropertyValue('--c-border-light').trim();
+  const corSuperficieP = estiloPatrimonio.getPropertyValue('--c-surface').trim();
+  const corTextoP = estiloPatrimonio.getPropertyValue('--c-text').trim();
+  const corFundoP = estiloPatrimonio.getPropertyValue('--c-bg').trim();
+
+  const dadosPatrimonio = {{ serie_patrimonio | tojson }};
+  new Chart(document.getElementById("grafico-patrimonio"), {
+    type: "line",
+    data: {
+      labels: dadosPatrimonio.map(p => p.data),
+      datasets: [{
+        label: "Património total",
+        data: dadosPatrimonio.map(p => parseFloat(p.total)),
+        borderColor: corAcentoP,
+        backgroundColor: `color-mix(in srgb, ${corAcentoP} 12%, transparent)`,
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointBackgroundColor: corAcentoP,
+        pointBorderColor: corSuperficieP,
+        pointBorderWidth: 2,
+        // O último segmento (âncora + movimentos desde ela, não confirmado por extrato) fica
+        // tracejado — não pode ter o mesmo peso visual dos pontos históricos, que são âncoras.
+        segment: {
+          borderDash: ctx => dadosPatrimonio[ctx.p1DataIndex].e_estimado ? [5, 5] : undefined,
+        },
+      }, {
+        label: "Património financeiro",
+        data: dadosPatrimonio.map(p => parseFloat(p.financeiro)),
+        borderColor: corMutedP,
+        backgroundColor: `color-mix(in srgb, ${corMutedP} 10%, transparent)`,
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointBackgroundColor: corMutedP,
+        pointBorderColor: corSuperficieP,
+        pointBorderWidth: 2,
+        segment: {
+          borderDash: ctx => dadosPatrimonio[ctx.p1DataIndex].e_estimado ? [5, 5] : undefined,
+        },
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: {
+            font: { family: 'Inter', size: 12 },
+            color: corMutedP,
+            usePointStyle: true,
+            boxWidth: 8,
+          }
+        },
+        tooltip: {
+          backgroundColor: corTextoP,
+          titleColor: corFundoP,
+          bodyColor: corFundoP,
+          padding: 10,
+          titleFont: { family: 'Inter', size: 13 },
+          bodyFont: { family: 'Inter', size: 14, weight: 'bold' },
+          displayColors: true,
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ': ' + new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          display: true,
+          grid: { color: corGrelhaP, drawBorder: false },
+          border: { display: false },
+          ticks: {
+            font: { family: 'Inter', size: 11 },
+            color: corMutedP,
+            callback: function(value) {
+              return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(value);
+            }
+          }
+        },
+        x: {
+          display: true,
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            font: { family: 'Inter', size: 11 },
+            color: corMutedP,
+            maxTicksLimit: 6
+          }
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index',
+      },
+    },
+  });
+</script>
+{% endblock %}

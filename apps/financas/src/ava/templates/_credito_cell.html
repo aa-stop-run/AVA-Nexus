@@ -1,0 +1,12 @@
+<form id="credito-cell-{{ movimento_id }}"
+      hx-post="/movimentos/{{ movimento_id }}/credito"
+      hx-target="#credito-cell-{{ movimento_id }}" hx-swap="outerHTML"
+      class="inline-block mr-2">
+  <select name="conta_relacionada_id" class="select-clean" style="max-width: 130px"
+          onchange="this.form.requestSubmit()">
+    <option value="">Sem crédito</option>
+    {% for c in creditos_disponiveis %}
+    <option value="{{ c.id }}" {% if conta_relacionada_id_atual == c.id %}selected{% endif %}>{{ c.nome }}</option>
+    {% endfor %}
+  </select>
+</form>

@@ -1,0 +1,81 @@
+<div class="mt-6 space-y-6">
+  <!-- Resumo da Operação -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="card p-4 bg-surface">
+      <div class="text-xs text-muted font-medium mb-1">Prestação Atual</div>
+      <div class="text-xl font-bold text-ink">{{ res.prestacao_atual | format_pt }} €<span class="text-xs text-muted font-normal">/mês</span></div>
+      <div class="text-xs text-muted mt-1">{{ res.prazo_meses_atual }} meses ({{ (res.prazo_meses_atual // 12) }} anos{% if res.prazo_meses_atual % 12 %} e {{ res.prazo_meses_atual % 12 }} m{% endif %})</div>
+    </div>
+    <div class="card p-4 bg-surface">
+      <div class="text-xs text-muted font-medium mb-1">Amortização Proposta</div>
+      <div class="text-xl font-bold text-accent">{{ res.valor_amortizar | format_pt }} €</div>
+      <div class="text-xs text-muted mt-1">Comissão bancária: {{ res.comissao_bancaria | format_pt }} €</div>
+    </div>
+    <div class="card p-4 bg-surface">
+      <div class="text-xs text-muted font-medium mb-1">Novo Capital em Dívida</div>
+      <div class="text-xl font-bold text-ink">{{ res.novo_capital | format_pt }} €</div>
+      <div class="text-xs text-muted mt-1">Antes: {{ res.capital_atual | format_pt }} €</div>
+    </div>
+  </div>
+
+  <!-- Cenários Lado a Lado -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Cenário 1: Reduzir Prestação -->
+    <div class="card p-6 border-2 border-border-light hover:border-border transition-all flex flex-col justify-between">
+      <div>
+        <div class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent/10 text-accent mb-3">Opção 1</div>
+        <h3 class="text-base font-bold text-ink mb-1">Reduzir Prestação Mensal</h3>
+        <p class="text-xs text-muted mb-4">Mantém o prazo de {{ res.prazo_meses_atual }} meses e alivia o orçamento mensal imediato.</p>
+        
+        <div class="p-4 bg-surface-alt rounded-lg space-y-3 mb-4">
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-muted">Nova Prestação:</span>
+            <span class="font-bold text-ink text-base">{{ res.cenario_reduzir_prestacao.nova_prestacao | format_pt }} €<span class="text-xs font-normal">/mês</span></span>
+          </div>
+          <div class="flex justify-between items-center text-sm border-t border-border-light pt-2">
+            <span class="text-muted">Poupança Mensal:</span>
+            <span class="font-bold text-positive text-base">-{{ res.cenario_reduzir_prestacao.poupanca_mensal | format_pt }} €/mês</span>
+          </div>
+          <div class="flex justify-between items-center text-xs text-muted">
+            <span>Prazo Restante:</span>
+            <span>{{ res.cenario_reduzir_prestacao.novo_prazo_meses }} meses (inalterado)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-border-light flex justify-between items-baseline">
+        <span class="text-xs text-muted">Poupança Total em Juros:</span>
+        <span class="text-lg font-bold text-positive">+{{ res.cenario_reduzir_prestacao.poupanca_total_juros | format_pt }} €</span>
+      </div>
+    </div>
+
+    <!-- Cenário 2: Reduzir Prazo -->
+    <div class="card p-6 border-2 border-positive/30 bg-positive-bg/20 flex flex-col justify-between">
+      <div>
+        <div class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-positive/20 text-positive mb-3">Opção 2 — Máxima Poupança</div>
+        <h3 class="text-base font-bold text-ink mb-1">Reduzir Prazo do Empréstimo</h3>
+        <p class="text-xs text-muted mb-4">Mantém a prestação de {{ res.prestacao_atual | format_pt }} € e elimina meses de dívida.</p>
+        
+        <div class="p-4 bg-surface rounded-lg space-y-3 mb-4">
+          <div class="flex justify-between items-center text-sm">
+            <span class="text-muted">Novo Prazo:</span>
+            <span class="font-bold text-ink text-base">{{ res.cenario_reduzir_prazo.novo_prazo_meses }} meses <span class="text-xs font-normal">({{ (res.cenario_reduzir_prazo.novo_prazo_meses // 12) }}a {{ res.cenario_reduzir_prazo.novo_prazo_meses % 12 }}m)</span></span>
+          </div>
+          <div class="flex justify-between items-center text-sm border-t border-border-light pt-2">
+            <span class="text-muted">Tempo Poupado:</span>
+            <span class="font-bold text-positive text-base">-{{ res.cenario_reduzir_prazo.meses_poupados }} meses <span class="text-xs font-normal">({{ (res.cenario_reduzir_prazo.meses_poupados // 12) }} anos{% if res.cenario_reduzir_prazo.meses_poupados % 12 %} e {{ res.cenario_reduzir_prazo.meses_poupados % 12 }}m{% endif %})</span></span>
+          </div>
+          <div class="flex justify-between items-center text-xs text-muted">
+            <span>Prestação Mensal:</span>
+            <span>{{ res.prestacao_atual | format_pt }} €/mês (mantém)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-positive/20 flex justify-between items-baseline">
+        <span class="text-xs text-muted">Poupança Total em Juros:</span>
+        <span class="text-xl font-bold text-positive">+{{ res.cenario_reduzir_prazo.poupanca_total_juros | format_pt }} €</span>
+      </div>
+    </div>
+  </div>
+</div>

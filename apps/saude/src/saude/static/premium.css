@@ -1,0 +1,1123 @@
+/* ============================================================
+   PREMIUM DESIGN SYSTEM — Assistente de Vida Pessoal
+   Carregado após app.css para sobrepor estilos Tailwind
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Variáveis globais ─────────────────────────────────────── */
+:root {
+  --font-premium: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --c-bg:           #FBF8F6;
+  --c-surface:      #FFFFFF;
+  --c-border:       #EDE6E1;
+  --c-border-light: #F5F0EC;
+
+  --c-text:         #241E1A;
+  --c-text-muted:   #7A6F68;
+  --c-text-faint:   #A69C94;
+
+  --c-accent:       #FF6A3D;
+  --c-accent-rgb:   255,106,61;
+  --c-accent-light: #FFF1EB;
+  --c-positive:     #16A34A;
+  --c-positive-bg:  #F0FDF4;
+  --c-negative:     #E11D48;
+  --c-negative-bg:  #FFF1F2;
+  --c-warning:      #CA8A04;
+  --c-warning-bg:   #FFFBEB;
+  --c-blue:         #2E6BF5;
+  --c-blue-bg:      #EEF3FF;
+
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+
+  --shadow-sm:   0 1px 3px rgba(36,30,26,.06), 0 1px 2px rgba(36,30,26,.04);
+  --shadow-md:   0 4px 12px rgba(36,30,26,.08), 0 2px 4px rgba(36,30,26,.04);
+  --shadow-lg:   0 10px 30px rgba(36,30,26,.10), 0 4px 8px rgba(36,30,26,.05);
+  --shadow-glow: 0 0 0 3px rgba(var(--c-accent-rgb),.15);
+
+  --sidebar-w: 220px;
+  --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Tema escuro: segue o sistema por omissão, ou escolha manual via
+   data-theme (script bloqueante em base.html evita flash do tema errado) ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-bg:           #020617;
+    --c-surface:      #080f1e;
+    --c-border:       rgba(56, 189, 248, 0.18);
+    --c-border-light: rgba(255, 255, 255, 0.08);
+
+    --c-text:         #F8FAFC;
+    --c-text-muted:   #94A3B8;
+    --c-text-faint:   #64748B;
+
+    --c-accent:       #06b6d4;
+    --c-accent-rgb:   6, 182, 212;
+    --c-accent-light: rgba(6, 182, 212, .15);
+    --c-positive:     #34D399;
+    --c-positive-bg:  rgba(52, 211, 153, .15);
+    --c-negative:     #F43F5E;
+    --c-negative-bg:  rgba(244, 63, 94, .15);
+    --c-warning:      #F59E0B;
+    --c-warning-bg:   rgba(245, 158, 11, .15);
+    --c-blue:         #38BDF8;
+    --c-blue-bg:      rgba(56, 189, 248, .15);
+
+    --shadow-sm:   0 1px 3px rgba(0, 0, 0, .4);
+    --shadow-md:   0 8px 24px -4px rgba(0, 0, 0, .6), 0 0 0 1px rgba(56, 189, 248, 0.1);
+    --shadow-lg:   0 16px 36px -4px rgba(0, 0, 0, .8), 0 0 20px rgba(6, 182, 212, 0.15);
+
+    --color-white:        var(--c-surface);
+    --color-page:         var(--c-bg);
+    --color-ink:          var(--c-text);
+    --color-muted:        var(--c-text-muted);
+    --color-border:       var(--c-border);
+    --color-positive:     var(--c-positive);
+    --color-warning:      var(--c-warning);
+    --color-negative:     var(--c-negative);
+    --color-accent-blue:  var(--c-blue);
+  }
+}
+
+:root[data-theme="dark"] {
+  --c-bg:           #020617;
+  --c-surface:      #080f1e;
+  --c-border:       rgba(56, 189, 248, 0.18);
+  --c-border-light: rgba(255, 255, 255, 0.08);
+
+  --c-text:         #F8FAFC;
+  --c-text-muted:   #94A3B8;
+  --c-text-faint:   #64748B;
+
+  --c-accent:       #06b6d4;
+  --c-accent-rgb:   6, 182, 212;
+  --c-accent-light: rgba(6, 182, 212, .15);
+  --c-positive:     #34D399;
+  --c-positive-bg:  rgba(52, 211, 153, .15);
+  --c-negative:     #F43F5E;
+  --c-negative-bg:  rgba(244, 63, 94, .15);
+  --c-warning:      #F59E0B;
+  --c-warning-bg:   rgba(245, 158, 11, .15);
+  --c-blue:         #38BDF8;
+  --c-blue-bg:      rgba(56, 189, 248, .15);
+
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, .4);
+  --shadow-md:   0 8px 24px -4px rgba(0, 0, 0, .6), 0 0 0 1px rgba(56, 189, 248, 0.1);
+  --shadow-lg:   0 16px 36px -4px rgba(0, 0, 0, .8), 0 0 20px rgba(6, 182, 212, 0.15);
+
+  --color-white:        var(--c-surface);
+  --color-page:         var(--c-bg);
+  --color-ink:          var(--c-text);
+  --color-muted:        var(--c-text-muted);
+  --color-border:       var(--c-border);
+  --color-positive:     var(--c-positive);
+  --color-warning:      var(--c-warning);
+  --color-negative:     var(--c-negative);
+  --color-accent-blue:  var(--c-blue);
+}
+
+/* ── Reset base ────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  font-family: var(--font-premium);
+  background: var(--c-bg);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Layout ────────────────────────────────────────────────── */
+body.bg-page {
+  background: var(--c-bg) !important;
+  display: grid !important;
+  grid-template-columns: var(--sidebar-w) 1fr;
+}
+
+/* ── Navegação — base partilhada pela sidebar e pela barra inferior ── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--c-text-muted);
+  transition: background var(--transition), color var(--transition);
+  position: relative;
+}
+
+.nav-item svg { width: 20px; height: 20px; flex-shrink: 0; opacity: .85; }
+.nav-item.active svg { opacity: 1; }
+
+.nav-item .badge-alert {
+  position: absolute;
+  background: var(--c-negative);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 999px;
+  min-width: 17px;
+  height: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* ── Sidebar (desktop) ─────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-brand {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--c-border-light);
+  margin-bottom: 8px;
+}
+
+.sidebar-brand-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.sidebar-brand-sub {
+  font-size: 11px;
+  color: var(--c-text-muted);
+  margin-top: 2px;
+}
+
+.sidebar-section { padding: 0 8px; margin-bottom: 4px; }
+
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--c-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 8px 8px 4px;
+}
+
+.sidebar .nav-item {
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 500;
+  margin: 1px 0;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+.sidebar .nav-item:hover { background: var(--c-border-light); color: var(--c-text); }
+
+.sidebar .nav-item.active {
+  background: var(--c-accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(var(--c-accent-rgb),.35);
+}
+
+.sidebar .nav-item .badge-alert { top: 6px; right: 8px; }
+
+/* ── Barra inferior (mobile) ───────────────────────────────── */
+.bottom-tab-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 40;
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.bottom-tab-bar .nav-item {
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 6px 4px;
+  border-radius: var(--radius-md);
+  flex: 1;
+  text-align: center;
+}
+
+.bottom-tab-bar .nav-item.active { color: var(--c-accent); }
+.bottom-tab-bar .nav-item .badge-alert { top: 0; right: 14px; }
+
+.bottom-tab-bar .nav-item-cta {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  margin-top: -22px;
+  box-shadow: 0 4px 14px rgba(var(--c-accent-rgb),.4);
+}
+
+.bottom-tab-bar .nav-item-cta svg { width: 24px; height: 24px; opacity: 1; }
+.bottom-tab-bar .nav-item-cta span { display: none; }
+
+/* ── "Mais" — folha inferior com os destinos secundários ───── */
+.mais-sheet-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 49;
+}
+
+.mais-sheet {
+  display: none;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 50;
+  background: var(--c-surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-lg);
+}
+
+.mais-sheet.aberta, .mais-sheet-backdrop.aberta { display: block; }
+
+.mais-sheet .nav-item {
+  padding: 12px 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--c-border-light);
+}
+.mais-sheet .nav-item:last-child { border-bottom: none; }
+.mais-sheet .nav-item .badge-alert { top: 14px; right: 8px; }
+
+.sidebar-divider {
+  border-top: 1px solid var(--c-border-light);
+  margin: 8px 16px;
+}
+
+/* ── Main content ──────────────────────────────────────────── */
+main {
+  padding: 28px 32px !important;
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ── Cards ─────────────────────────────────────────────────── */
+.card {
+  background: var(--c-surface) !important;
+  border: none !important;
+  border-radius: var(--radius-lg) !important;
+  padding: 20px 24px !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* KPI card variant */
+.kpi-card {
+  background: var(--c-surface);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--kpi-accent, var(--c-accent));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.kpi-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.kpi-card.positive  { --kpi-accent: var(--c-positive); }
+.kpi-card.negative  { --kpi-accent: var(--c-negative); }
+.kpi-card.accent    { --kpi-accent: var(--c-accent); }
+.kpi-card.blue      { --kpi-accent: var(--c-blue); }
+.kpi-card.warning   { --kpi-accent: var(--c-warning); }
+
+.kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--c-text-muted);
+  margin-bottom: 8px;
+}
+
+.kpi-value {
+  /* clamp em vez de um tamanho fixo: cartões com valores maiores (ex. totais de património,
+     na casa das centenas de milhar) partiam a meio do número em ecrãs estreitos de 2 colunas —
+     o clamp encolhe antes de quebrar, sem afetar o tamanho em ecrãs largos (min(28px) já ao
+     alcance a partir de ~509px de largura de viewport). */
+  font-size: clamp(16px, 4.5vw, 28px);
+  font-weight: 700;
+  color: var(--c-text);
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-value.positive { color: var(--c-positive); }
+.kpi-value.negative { color: var(--c-negative); }
+.kpi-value.accent   { color: var(--c-accent); }
+.kpi-value.blue     { color: var(--c-blue); }
+
+.kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.kpi-trend.up   { background: var(--c-positive-bg); color: var(--c-positive); }
+.kpi-trend.down { background: var(--c-negative-bg);  color: var(--c-negative); }
+.kpi-trend.flat { background: var(--c-border-light); color: var(--c-text-muted); }
+
+.kpi-sub {
+  font-size: 11.5px;
+  color: var(--c-text-muted);
+  margin-top: 6px;
+}
+
+/* ── Section headers ───────────────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text);
+  letter-spacing: -0.1px;
+}
+
+.section-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  background: var(--c-border-light);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.section-badge-extraordinaria {
+  color: var(--c-warning);
+  background: color-mix(in srgb, var(--c-warning) 15%, transparent);
+}
+
+.filtro-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  background: transparent;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.filtro-pill:hover { border-color: var(--c-accent); color: var(--c-text); }
+
+.filtro-pill.is-ativo {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  color: white;
+}
+
+.insight-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--c-border);
+  background: var(--c-bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+.insight-linha:last-child { margin-bottom: 0; }
+
+.insight-linha.tom-atencao { border-left-color: var(--c-warning); }
+.insight-linha.tom-positivo { border-left-color: var(--c-positive); }
+.insight-linha.tom-neutro { border-left-color: var(--c-text-muted); }
+
+/* ── Progress bars ─────────────────────────────────────────── */
+.progress-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--c-border-light);
+  cursor: pointer;
+}
+
+/* Cada categoria passou a ser o seu próprio <details>/<summary> (para a lista de despesas
+   expandir por baixo dela) -- ".progress-bar-wrap:last-child" deixou de identificar a última
+   categoria do grupo, porque agora é sempre o único filho do seu <summary>, logo sempre
+   "last-child". A borda em falta tem de vir do <details> que os envolve, não da linha. */
+.categoria-details:last-child .progress-bar-wrap { border-bottom: none; }
+
+.categoria-movimentos {
+  padding: 4px 0 8px 18px;
+}
+
+/* O marcador nativo de <summary> não fica visível de forma fiável quando o conteúdo é um filho
+   flex (progress-bar-wrap) -- em vez de depender disso, o chevron é um item flex próprio, cuja
+   rotação sinaliza aberto/fechado com mais consistência entre navegadores. */
+.categoria-details summary { list-style: none; }
+.categoria-details summary::-webkit-details-marker { display: none; }
+
+.categoria-chevron {
+  color: var(--c-text-muted);
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.categoria-details[open] .categoria-chevron { transform: rotate(90deg); }
+
+.progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.progress-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.progress-track {
+  width: 80px;
+  height: 5px;
+  background: var(--c-border-light);
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--c-accent);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-pct {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  width: 32px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-amount {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--c-text);
+  width: 72px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Stat components ───────────────────────────────────────── */
+.stat-label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.7px !important;
+  color: var(--c-text-muted) !important;
+}
+
+.stat-value {
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.5px !important;
+  line-height: 1.1 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ── Health bar ────────────────────────────────────────────── */
+.health-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--c-border-light);
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.health-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Tables ────────────────────────────────────────────────── */
+.table-clean {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-clean th {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+  color: var(--c-text-faint) !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid var(--c-border) !important;
+  white-space: nowrap !important;
+}
+
+.table-clean td {
+  font-size: 13px !important;
+  color: var(--c-text);
+  padding: 12px 16px !important;
+  border-bottom: 1px solid var(--c-border-light) !important;
+  vertical-align: middle !important;
+}
+
+.table-clean tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+.table-row-interactive:hover {
+  background: var(--c-border-light) !important;
+}
+
+/* ── Stark HUD Glassmorphic Panels & Brackets ──────────────── */
+.card, .hud-panel {
+  background: var(--c-surface) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid var(--c-border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-bracket {
+  position: relative;
+}
+.hud-bracket::before,
+.hud-bracket::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--c-accent);
+  pointer-events: none;
+  z-index: 10;
+}
+.hud-bracket::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid var(--c-accent);
+  border-left: 2px solid var(--c-accent);
+}
+.hud-bracket::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid var(--c-accent);
+  border-right: 2px solid var(--c-accent);
+}
+
+/* ── Select Dropdown Dark Mode Readability ─────────────────── */
+select.hud-select,
+#select-parametro {
+  background-color: #0f172a !important;
+  color: #38bdf8 !important;
+  border: 1.5px solid #0284c7 !important;
+  border-radius: 6px !important;
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.12) !important;
+}
+
+select.hud-select option,
+#select-parametro option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  padding: 10px 12px !important;
+  font-size: 13px !important;
+}
+
+/* ── Buttons ───────────────────────────────────────────────── */
+.btn-primary {
+  background: var(--c-accent) !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  border-radius: var(--radius-md) !important;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition), box-shadow var(--transition);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--c-accent) 85%, black) !important;
+  box-shadow: 0 4px 12px rgba(var(--c-accent-rgb),.3);
+}
+
+.btn-pill-negative {
+  background: var(--c-negative-bg) !important;
+  color: var(--c-negative) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 5px 12px !important;
+  border-radius: 999px !important;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition);
+  min-height: 44px;
+}
+
+.btn-pill-negative:hover {
+  background: #ffe4e6 !important;
+}
+
+.btn-pill-positive {
+  background: var(--c-positive-bg) !important;
+  color: var(--c-positive) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 5px 12px !important;
+  border-radius: 999px !important;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition);
+  min-height: 44px;
+}
+
+.btn-pill-muted {
+  background: var(--c-border-light) !important;
+  color: var(--c-text-muted) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 5px 12px !important;
+  border-radius: 999px !important;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition);
+  min-height: 44px;
+}
+
+.btn-pill-transfer {
+  background: var(--c-accent) !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 5px 14px !important;
+  border-radius: 999px !important;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition), box-shadow var(--transition);
+  min-height: 44px;
+}
+
+.btn-pill-transfer:hover {
+  background: color-mix(in srgb, var(--c-accent) 85%, black) !important;
+  box-shadow: 0 2px 8px rgba(var(--c-accent-rgb),.35);
+}
+
+/* ── Selects & inputs ──────────────────────────────────────── */
+.select-clean {
+  font-size: 13px !important;
+  border: 1px solid var(--c-border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 7px 10px !important;
+  background: var(--c-surface) !important;
+  color: var(--c-text) !important;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  min-width: 160px !important;
+  appearance: auto;
+  min-height: 44px;
+}
+
+.select-clean:focus {
+  outline: none;
+  border-color: var(--c-accent) !important;
+  box-shadow: var(--shadow-glow);
+}
+
+input[type="text"], input[type="number"], input[type="date"], input[type="search"], input[type="month"] {
+  font-family: var(--font-premium);
+  font-size: 13px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  min-height: 44px;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ── Badge count ───────────────────────────────────────────── */
+.badge-count {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--c-border-light) !important;
+  color: var(--c-text-muted) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border-radius: 999px !important;
+  min-width: 22px !important;
+  height: 22px !important;
+  padding: 0 6px !important;
+}
+
+/* ── Text utilities ────────────────────────────────────────── */
+.text-positive { color: var(--c-positive) !important; }
+.text-negative { color: var(--c-negative) !important; }
+.text-muted    { color: var(--c-text-muted) !important; }
+.text-faint    { color: var(--c-text-faint) !important; }
+.text-accent   { color: var(--c-accent) !important; }
+
+/* ── Page title ────────────────────────────────────────────── */
+h1 {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: var(--c-text) !important;
+  letter-spacing: -0.3px !important;
+}
+
+h2 {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--c-text) !important;
+}
+
+/* ── Month nav ─────────────────────────────────────────────── */
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--c-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  font-size: 13px;
+}
+
+.month-nav a, .month-nav span {
+  padding: 7px 14px;
+  color: var(--c-text-muted);
+  font-weight: 500;
+  transition: background var(--transition), color var(--transition);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.month-nav a:hover {
+  background: var(--c-border-light);
+  color: var(--c-text);
+}
+
+.month-nav .current-month {
+  color: var(--c-text);
+  font-weight: 600;
+  background: var(--c-border-light);
+  padding: 7px 18px;
+}
+
+/* ── Grelhas de KPI ────────────────────────────────────────── */
+.kpi-grid { display: grid; gap: 16px; margin-bottom: 16px; }
+.kpi-grid-hero { grid-template-columns: repeat(2, 1fr); }
+.kpi-grid-secundaria { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+
+/* Variante de 2 colunas (ex. Total de Ativos/Total de Dívidas em /patrimonio) -- mesma razão do
+   .dashboard-grid-equal abaixo: só a partir do desktop, senão ganha por especificidade à regra
+   mobile de .kpi-grid-secundaria em @media (max-width: 767px) mais abaixo (achado de 2026-08-21,
+   mesma classe de bug: um style="" inline fazia exatamente isto antes desta classe existir). */
+@media (min-width: 768px) {
+  .kpi-grid-secundaria.kpi-grid-secundaria-2col { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kpi-card-mini {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-light);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+.kpi-card-mini .kpi-label { font-size: 10px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .6px; color: var(--c-text-muted); font-weight: 600; }
+.kpi-card-mini .kpi-value { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi-card-mini.blue .kpi-value { color: var(--c-blue); }
+.kpi-card-mini.positive .kpi-value { color: var(--c-positive); }
+.kpi-card-mini.negative .kpi-value { color: var(--c-negative); }
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Duas regras abaixo, mesma razão: só a partir do breakpoint de desktop, senão ganham por
+   especificidade à regra mobile de .dashboard-grid em @media (max-width: 767px) mais abaixo --
+   .single-col ficou ela própria vítima deste bug (achado de 2026-08-21, revisão de mobile): a
+   correção de .dashboard-grid-equal abaixo (2026-08-20) não foi replicada para .single-col na
+   mesma altura, apesar do aviso neste comentário já apontar exatamente para isto. Sem a media
+   query, "1fr" sem minmax(0, ...) deixa a grelha crescer para caber o conteúdo em vez de o
+   conter -- confirmado em produção: expandir uma categoria no dashboard esticava a página ~360px
+   para lá do ecrã.
+   Duas colunas de largura igual (ex. Ativos/Dívidas em /patrimonio) -- achado de 2026-08-20, o
+   style="" inline que isto substitui já fazia a mesma coisa (os cartões de Dívidas e Créditos
+   ficavam espremidos numa segunda coluna fora do ecrã em mobile). */
+@media (min-width: 768px) {
+  .dashboard-grid.single-col { grid-template-columns: 1fr; }
+  .dashboard-grid.dashboard-grid-equal { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── Animations ────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.kpi-card, .card {
+  animation: fadeInUp 0.3s ease both;
+}
+
+.kpi-card:nth-child(1) { animation-delay: 0ms; }
+.kpi-card:nth-child(2) { animation-delay: 50ms; }
+.kpi-card:nth-child(3) { animation-delay: 100ms; }
+.kpi-card:nth-child(4) { animation-delay: 150ms; }
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── Period pill ───────────────────────────────────────────── */
+.period-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--c-surface);
+  border-radius: var(--radius-xl);
+  padding: 6px 6px 6px 14px;
+  box-shadow: var(--shadow-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.period-pill a {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--c-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text-muted);
+  font-size: 14px;
+  transition: background var(--transition), color var(--transition);
+  text-decoration: none;
+}
+
+.period-pill a:hover {
+  background: var(--c-accent);
+  color: #fff;
+}
+
+/* ── Linha resolvida animation ─────────────────────────────── */
+.linha-resolvida {
+  animation: desvanecer 2.2s ease forwards;
+}
+
+@keyframes desvanecer {
+  0%, 45% { opacity: 1; }
+  100%     { opacity: 0; height: 0; padding: 0; margin: 0; overflow: hidden; }
+}
+
+/* ── Cartão de registo (substitui table-clean nas listas editáveis) ── */
+.cartao-registo {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  position: relative;
+  transition: background var(--transition);
+}
+
+/* Cartão de navegação pura (património): o link cobre o cartão inteiro para dar um alvo de
+   toque grande, sem precisar de tornar o título em si um link (o macro escapa `titulo` como
+   texto simples). Só cartões com este link ganham o realce ao passar o rato/tocar. */
+.cartao-registo-link-cobertura {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.cartao-registo:has(.cartao-registo-link-cobertura):hover {
+  background: var(--c-border-light);
+}
+
+.cartao-registo-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cartao-registo-titulo { font-weight: 600; font-size: 14px; color: var(--c-text); }
+.cartao-registo-meta { font-size: 12px; color: var(--c-text-muted); margin-top: 2px; }
+.cartao-registo-valor { font-weight: 700; font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cartao-registo-sub-valor { font-size: 11px; color: var(--c-text-muted); text-align: right; margin-top: 2px; white-space: nowrap; }
+
+.cartao-registo-campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.cartao-registo-campo { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--c-text-muted); }
+.cartao-registo-campo select, .cartao-registo-campo input { min-height: 44px; }
+
+.cartao-registo-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.cartao-registo-acoes-secundarias {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--c-border-light);
+}
+
+@media (max-width: 480px) {
+  .cartao-registo-acoes, .cartao-registo-acoes-secundarias { flex-direction: column; align-items: stretch; }
+  .cartao-registo-acoes button, .cartao-registo-acoes-secundarias select, .cartao-registo-acoes-secundarias button { width: 100%; min-height: 44px; }
+}
+
+/* ── Painel de filtros recolhível ──────────────────────────── */
+.filtros-painel { margin-bottom: 24px; }
+.filtros-resumo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+  padding: 10px 14px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  list-style: none;
+  min-height: 44px;
+}
+.filtros-resumo::-webkit-details-marker { display: none; }
+
+/* ── Info row ──────────────────────────────────────────────── */
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-border-light);
+  font-size: 13.5px;
+}
+
+.info-row:last-child { border-bottom: none; }
+.info-row-label { color: var(--c-text-muted); }
+.info-row-value { font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
+
+/* ── Chart container ───────────────────────────────────────── */
+.chart-container {
+  position: relative;
+  width: 100%;
+}
+
+/* ── Mobile Responsiveness ─────────────────────────────────── */
+@media (max-width: 767px) {
+  body.bg-page { grid-template-columns: 1fr !important; }
+  .sidebar { display: none; }
+  .bottom-tab-bar { display: flex; }
+  main { padding: 16px !important; padding-bottom: 88px !important; }
+  .kpi-grid-secundaria { grid-template-columns: 1fr; }
+  .kpi-card { padding: 14px 12px; }
+  .flex-wrap { flex-direction: column; align-items: stretch !important; }
+  .flex-wrap > * { width: 100%; }
+  .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
+  /* Cabeçalho do dashboard (título + navegação de período à esquerda, atalhos de cartão de
+     refeição + "Novo Registo" à direita) -- achado de 2026-08-21, revisão de mobile: nenhum dos
+     dois grupos tinha flex-wrap, por isso em ecrãs estreitos com 2+ cartões de refeição os
+     botões saíam do ecrã em vez de quebrar linha. .flex-wrap não serve aqui: empilha cada filho
+     a 100% de largura, o que é certo para colunas do dashboard mas desperdiçava largura para uma
+     fila de botões, que só precisa de poder quebrar. */
+  .dashboard-header { flex-wrap: wrap; row-gap: 10px; }
+  .dashboard-header-actions { flex-wrap: wrap; justify-content: flex-end; }
+}

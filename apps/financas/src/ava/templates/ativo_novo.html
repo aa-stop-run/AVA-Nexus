@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Novo Ativo{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-6">Novo Ativo</h1>
+{% if erro %}<p class="text-negative text-sm mb-4">{{ erro }}</p>{% endif %}
+<div class="card max-w-lg">
+  <form method="post" action="/ativos/novo" class="space-y-4">
+    <label class="block text-sm">Titular
+      <select name="titular_id" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+        {% for titular in titulares %}
+        <option value="{{ titular.id }}">{{ titular.nome }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="block text-sm">Nome
+      <input type="text" name="nome" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    <label class="block text-sm">Tipo
+      <select name="tipo" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+        <option value="carro">Carro</option>
+        <option value="mota">Mota</option>
+        <option value="casa">Casa</option>
+        <option value="outro">Outro</option>
+      </select>
+    </label>
+    <label class="block text-sm">Valor de compra (€)
+      <input type="number" step="0.01" name="valor_atual" class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    {# Só relevante para carros/motas: é a data de matrícula, e é dela que saem as datas de
+       inspeção e IUC (ver ava.obrigacoes.regras). Sem este campo, um veículo criado aqui nunca
+       gera nenhuma dessas obrigações. #}
+    <label class="block text-sm">Data de matrícula / aquisição
+      <input type="date" name="data_aquisicao" class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+      <span class="text-xs text-muted">Necessária para calcular inspeção e IUC dos veículos.</span>
+    </label>
+    <button type="submit" class="btn-primary">Save</button>
+  </form>
+</div>
+{% endblock %}

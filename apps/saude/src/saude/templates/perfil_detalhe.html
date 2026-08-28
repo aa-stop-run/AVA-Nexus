@@ -1,0 +1,951 @@
+{% extends "base.html" %}
+
+{% block title %}{{ perfil.titular.nome }} — Health Dossier{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-start">
+  <div>
+    <a href="/" style="font-size: 12px; color: var(--c-muted); text-decoration: none; font-weight: 500; display: inline-block; margin-bottom: 8px;">← Voltar ao Painel Geral</a>
+    <h1 class="page-title flex items-center gap-2">
+      <span>Health Dossier: {{ perfil.titular.nome }}</span>
+      <span style="font-size: 12px; font-weight: 600; padding: 2px 8px; background: rgba(37, 99, 235, 0.1); color: var(--c-accent-blue); border-radius: 4px;">
+        {{ perfil.grupo_sanguineo or 'Grupo ?' }}
+      </span>
+    </h1>
+    <div style="font-size: 12px; color: var(--c-muted); margin-top: 4px;">
+      Nº Utente SNS: <span style="font-family: var(--font-mono); font-weight: 600; color: var(--c-ink);">{{ perfil.numero_utente_sns or 'Não definido' }}</span>
+      • Nasc.: {{ perfil.data_nascimento.strftime('%d/%m/%Y') if perfil.data_nascimento else 'N/D' }}
+    </div>
+  </div>
+
+  <div class="flex gap-2 flex-wrap">
+    <button onclick="document.getElementById('modal-upload-analises').style.display='flex'" class="btn-primary" style="cursor: pointer; background: var(--c-accent-blue);">
+      📤 Upload Análises (PDF)
+    </button>
+    <button onclick="document.getElementById('modal-biomarcador').style.display='flex'" class="btn-primary" style="background: var(--bg-surface-alt); color: var(--c-ink); border: 1px solid var(--c-border); cursor: pointer;">
+      ➕ Registar Biomarcador
+    </button>
+    <button onclick="document.getElementById('modal-consulta').style.display='flex'" class="btn-primary" style="background: var(--bg-surface-alt); color: var(--c-ink); border: 1px solid var(--c-border); cursor: pointer;">
+      📅 Consulta
+    </button>
+    <button onclick="document.getElementById('modal-medicamento').style.display='flex'" class="btn-primary" style="background: var(--bg-surface-alt); color: var(--c-ink); border: 1px solid var(--c-border); cursor: pointer;">
+      💊 Medicamento
+    </button>
+    <button onclick="document.getElementById('modal-vacina').style.display='flex'" class="btn-primary" style="background: var(--bg-surface-alt); color: var(--c-ink); border: 1px solid var(--c-border); cursor: pointer;">
+      💉 Vacina
+    </button>
+    <button onclick="document.getElementById('modal-editar-perfil').style.display='flex'" class="btn-primary" style="background: var(--bg-surface-alt); color: var(--c-muted); border: 1px solid var(--c-border); cursor: pointer;">
+      ✏️ Edit Perfil
+    </button>
+  </div>
+</div>
+
+<!-- Alergias e Condições Clínicas -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+  <div class="card" style="padding: 16px 20px;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: {% if perfil.alergias %}var(--c-negative){% else %}var(--c-muted){% endif %}; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Alergias & Reações</div>
+    <div style="font-size: 14px; font-weight: 600; color: var(--c-ink);">{{ perfil.alergias or 'Nenhuma alergia conhecida registada.' }}</div>
+  </div>
+
+  <div class="card" style="padding: 16px 20px;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Condições Crónicas / Notas</div>
+    <div style="font-size: 14px; font-weight: 500; color: var(--c-ink);">{{ perfil.condicoes_cronicas or 'Sem condições crónicas registadas.' }}</div>
+  </div>
+</div>
+
+<!-- Secção: Laboratório de Análises & Evolução de Biomarkers -->
+<div class="card mb-8" style="padding: 24px;">
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--c-ink); display: flex; align-items: center; gap: 8px;">
+        <span>🩸 Laboratório & Evolução de Análises Clínicas</span>
+        <span style="font-size: 11px; padding: 2px 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: 9999px; color: var(--c-muted);">{{ perfil.biomarcadores|length }} leituras</span>
+      </h2>
+      <p style="font-size: 12px; color: var(--c-muted); margin-top: 2px;">Variações e curvas temporais de colesterol, glicemia, vitaminas e hemograma.</p>
+    </div>
+  </div>
+
+  <!-- Cards de Insights de Variação Face ao Exame Anterior -->
+  {% if insights %}
+  <div class="mb-6">
+    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--c-muted); letter-spacing: 0.05em; margin-bottom: 8px;">💡 Insights & Variações Recentes</div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {% for ins in insights %}
+      <div style="padding: 12px 14px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="flex justify-between items-start mb-1">
+          <span style="font-size: 12px; font-weight: 700; color: var(--c-ink);">{{ ins.parametro }}</span>
+          <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; {% if ins.estado == 'normal' %}background: rgba(22, 163, 74, 0.1); color: var(--c-positive);{% elif ins.estado == 'alto' %}background: rgba(220, 38, 38, 0.1); color: var(--c-negative);{% else %}background: rgba(217, 119, 6, 0.1); color: var(--c-accent-amber);{% endif %}">
+            {{ ins.estado }}
+          </span>
+        </div>
+        <div style="font-size: 11px; color: var(--c-muted); margin-top: 4px; line-height: 1.4;">
+          {{ ins.texto }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Gráfico Interativo de Evolução -->
+  <div style="padding: 16px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); margin-bottom: 20px;">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+      <div>
+        <span style="font-size: 12px; font-weight: 700; color: var(--c-ink);">📈 Gráfico de Tendência & Evolução Temporal</span>
+        <p style="font-size: 11px; color: var(--c-muted); margin: 0;">Compara múltiplos parâmetros laboratoriais ou analisa isoladamente.</p>
+      </div>
+      
+      <div class="flex items-center gap-2 flex-wrap">
+        <button type="button" onclick="carregarPainelLipidico()" class="btn-primary" style="font-size: 11px; padding: 4px 10px; background: rgba(2, 132, 199, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; cursor: pointer; font-weight: 600;">
+          🩸 Painel Lipídico
+        </button>
+        <button type="button" onclick="carregarMetabolico()" class="btn-primary" style="font-size: 11px; padding: 4px 10px; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 6px; cursor: pointer; font-weight: 600;">
+          🍬 Glicemia & Hemograma
+        </button>
+        
+        {% if parametros_disponiveis %}
+        <div class="flex items-center gap-1.5 ml-1">
+          <label for="select-parametro" style="font-size: 11px; color: var(--c-muted);">Parâmetro:</label>
+          <select id="select-parametro" onchange="atualizarGraficoBiomarcador(this.value)" class="hud-select" style="min-width: 180px; padding: 5px 10px; font-size: 12px; font-weight: 700; background: #0f172a !important; color: #38bdf8 !important; border: 1.5px solid #0284c7 !important; border-radius: 6px; cursor: pointer; outline: none;">
+            {% for p in parametros_disponiveis %}
+            <option value="{{ p }}" style="background: #0f172a; color: #f8fafc; padding: 6px 10px; font-weight: 600;">{{ p }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div style="height: 240px; position: relative;">
+      <canvas id="chart-biomarcadores"></canvas>
+    </div>
+  </div>
+
+  <!-- Secção Separada por Análise / Sessão de Exame com Filtro -->
+  {% if sessoes_analises %}
+  <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--c-border);">
+    <!-- Cabeçalho & Filtro de Escolha entre Análises -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px;">
+      <div>
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--c-ink); display: flex; align-items: center; gap: 6px;">
+          <span>📋</span> <span>Resultados Detalhados por Relatório Clínico</span>
+        </h3>
+        <p style="font-size: 12px; color: var(--c-muted); margin-top: 2px;">Filtra por relatório para ver os parâmetros de uma clínica ou visualiza todas as análises.</p>
+      </div>
+
+      <!-- Barra de Filtros / Pills -->
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+        <button type="button" onclick="filtrarSessao('todas')" id="btn-filtro-todas" class="btn-filtro-sessao" style="padding: 6px 14px; border-radius: 9999px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; background: #3b82f6; color: #ffffff; border: 1px solid #3b82f6;">
+          🌐 Todas ({{ sessoes_analises|length }})
+        </button>
+        {% for s in sessoes_analises %}
+        <button type="button" onclick="filtrarSessao('{{ s.id }}')" id="btn-filtro-{{ s.id }}" class="btn-filtro-sessao" style="padding: 6px 14px; border-radius: 9999px; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; background: var(--bg-surface-alt); color: var(--c-muted); border: 1px solid var(--c-border);">
+          🩸 {{ s.data.strftime('%d/%m/%Y') }} — {{ s.laboratorio }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Lista de Cartões por Análise -->
+    <div id="container-sessoes-analises">
+      {% for s in sessoes_analises %}
+      <div class="sessao-card" id="{{ s.id }}" style="margin-bottom: 20px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); overflow: hidden;">
+        <!-- Cabeçalho do Exame -->
+        <div style="padding: 14px 18px; background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--c-border); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(59, 130, 246, 0.12); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+              🔬
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 14px; font-weight: 700; color: var(--c-ink);">Colheita de {{ s.data.strftime('%d/%m/%Y') }}</span>
+                <span style="font-size: 11.5px; font-weight: 600; color: var(--c-muted);">({{ s.laboratorio }})</span>
+              </div>
+              <div style="font-size: 11.5px; color: var(--c-muted); display: flex; align-items: center; gap: 6px; margin-top: 1px;">
+                <span>{{ s.biomarcadores|length }} biomarcadores</span>
+                <span>•</span>
+                {% if s.alterados > 0 %}
+                <span style="color: var(--c-negative); font-weight: 600;">⚠️ {{ s.alterados }} fora de referência</span>
+                {% else %}
+                <span style="color: var(--c-positive); font-weight: 600;">✓ Todos nos valores de referência</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            {% if s.documento_id %}
+            <a href="/documentos/{{ s.documento_id }}/visualizar" target="_blank" class="btn-primary" style="text-decoration: none; font-size: 11.5px; padding: 6px 12px; background: #3b82f6; color: white; border-radius: 5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+              📄 Ver PDF Original
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Tabela do Exame -->
+        <div style="overflow-x: auto; padding: 0 10px 6px;">
+          <table class="table-clean">
+            <thead>
+              <tr>
+                <th>Categoria</th>
+                <th>Biomarcador / Parâmetro</th>
+                <th style="text-align: right; padding-right: 28px; white-space: nowrap;">Valor</th>
+                <th style="padding-left: 14px; min-width: 140px; white-space: nowrap;">Referência Normal</th>
+                <th>Estado</th>
+                <th style="text-align: center;">Origem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in s.biomarcadores %}
+              <tr class="table-row-interactive">
+                <td>
+                  <span style="font-size: 11px; color: var(--c-muted);">{{ b.categoria }}</span>
+                </td>
+                <td style="font-weight: 700; color: var(--c-ink);">{{ b.parametro }}</td>
+                <td style="text-align: right; font-weight: 700; color: var(--c-ink); font-family: var(--font-mono); padding-right: 28px; white-space: nowrap;">
+                  {{ b.valor }} <span style="font-size: 11px; font-weight: 500; color: var(--c-muted);">{{ b.unidade }}</span>
+                </td>
+                <td style="font-size: 11.5px; color: var(--c-muted); padding-left: 14px; white-space: nowrap;">
+                  {% if b.valor_referencia_min is not none and b.valor_referencia_max is not none %}
+                    {{ b.valor_referencia_min }} – {{ b.valor_referencia_max }} {{ b.unidade }}
+                  {% elif b.valor_referencia_max is not none %}
+                    &lt; {{ b.valor_referencia_max }} {{ b.unidade }}
+                  {% elif b.valor_referencia_min is not none %}
+                    &gt; {{ b.valor_referencia_min }} {{ b.unidade }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td>
+                  <span style="padding: 2px 8px; font-size: 11px; font-weight: 600; border-radius: 4px; {% if b.estado == 'normal' %}background: rgba(22, 163, 74, 0.1); color: var(--c-positive);{% elif b.estado == 'alto' %}background: rgba(220, 38, 38, 0.1); color: var(--c-negative);{% else %}background: rgba(217, 119, 6, 0.1); color: var(--c-accent-amber);{% endif %}">
+                    {{ b.estado | upper }}
+                  </span>
+                </td>
+                <td style="text-align: center; white-space: nowrap;">
+                  {% if b.documento_id %}
+                    <a href="/documentos/{{ b.documento_id }}/visualizar" target="_blank" title="Abrir PDF original num novo separador" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; background: rgba(59, 130, 246, 0.12); color: #3b82f6; text-decoration: none; font-size: 11px; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.25);">
+                      📄 PDF
+                    </a>
+                  {% else %}
+                    <span style="color: var(--c-muted); font-size: 11px;">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <p style="font-size: 12px; color: var(--c-muted); padding: 8px 0;">Ainda não existem análises registadas. Faz o upload de um relatório em PDF ou regista um biomarcador para começar a acompanhar as variações.</p>
+  {% endif %}
+</div>
+
+<!-- SECÇÃO DE DOCUMENTOS E RELATÓRIOS MÉDICOS ORIGINAIS -->
+<div class="card mb-8" style="padding: 24px;">
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--c-ink); display: flex; align-items: center; gap: 8px;">
+        <span>📑 Relatórios & Documentos Clínicos Originais</span>
+        <span style="font-size: 11px; padding: 2px 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: 9999px; color: var(--c-muted);">
+          {{ perfil.documentos|length }} ficheiros
+        </span>
+      </h2>
+      <p style="font-size: 12px; color: var(--c-muted); margin-top: 2px;">Ficheiros PDF oficiais arquivados, sincronizados com Paperless-ngx e disponíveis para visualização imediata.</p>
+    </div>
+  </div>
+
+  {% if perfil.documentos %}
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px;">
+    {% for doc in perfil.documentos %}
+    <div style="padding: 16px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+          <span style="font-size: 11px; font-family: var(--font-mono); font-weight: 700; color: var(--c-accent-blue); background: rgba(59, 130, 246, 0.12); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.2);">
+            COLHEITA: {{ doc.data_documento.strftime('%d/%m/%Y') }}
+          </span>
+          <span style="font-size: 11px; color: var(--c-muted); font-family: var(--font-mono);">{{ (doc.tamanho_bytes / 1024) | round(1) }} KB</span>
+        </div>
+        <div style="font-weight: 700; font-size: 13px; color: var(--c-ink); margin-bottom: 4px; line-height: 1.4;">
+          {{ doc.nome_ficheiro }}
+        </div>
+        <div style="font-size: 12px; color: var(--c-muted); display: flex; align-items: center; gap: 6px;">
+          <span>🏥</span> <span>{{ doc.laboratorio_clinica or 'Laboratório Clínico' }}</span>
+        </div>
+      </div>
+      
+      <div style="display: flex; gap: 8px; padding-top: 6px; border-top: 1px solid var(--c-border);">
+        <a href="/documentos/{{ doc.id }}/visualizar" target="_blank" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none; font-size: 12px; padding: 7px 12px; background: #3b82f6; color: white; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+          <span>📄</span> Abrir PDF Original
+        </a>
+        <a href="/documentos/{{ doc.id }}/download" download title="Descarregar ficheiro" class="btn-secondary" style="text-align: center; text-decoration: none; font-size: 12px; padding: 7px 12px; border: 1px solid var(--c-border); color: var(--c-ink); border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; background: var(--bg-surface);">
+          <span>⬇️</span>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="font-size: 12px; color: var(--c-muted); padding: 8px 0;">Ainda não existem relatórios PDF anexados a este perfil.</p>
+  {% endif %}
+</div>
+
+<!-- Secção 1: Medical Appointments -->
+<div class="card mb-8" style="padding: 24px;">
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--c-ink); display: flex; align-items: center; gap: 8px;">
+        <span>📅 Medical Appointments</span>
+        <span style="font-size: 11px; padding: 2px 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: 9999px; color: var(--c-muted);">{{ perfil.consultas|length }}</span>
+      </h2>
+      <p style="font-size: 12px; color: var(--c-muted); margin-top: 2px;">Histórico e próximas marcações de {{ perfil.titular.nome }}.</p>
+    </div>
+  </div>
+
+  {% if perfil.consultas %}
+  <div style="overflow-x: auto;">
+    <table class="table-clean">
+      <thead>
+        <tr>
+          <th>Data & Hora</th>
+          <th>Especialidade</th>
+          <th>Médico</th>
+          <th>Local / Clínica</th>
+          <th>Instruções / Motivo</th>
+          <th style="text-align: right;">Custo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in perfil.consultas %}
+        <tr class="table-row-interactive">
+          <td style="font-size: 12px; color: var(--c-muted); font-family: var(--font-mono); font-weight: 600;">
+            {{ c.data_hora.strftime('%d/%m/%Y às %H:%M') }}
+          </td>
+          <td>
+            <span style="padding: 2px 8px; font-size: 11px; font-weight: 600; background: rgba(37, 99, 235, 0.1); color: var(--c-accent-blue); border-radius: 4px;">
+              {{ c.especialidade }}
+            </span>
+          </td>
+          <td style="color: var(--c-ink);">{{ c.medico or '—' }}</td>
+          <td style="font-size: 12px; color: var(--c-muted);">{{ c.local_clinica or '—' }}</td>
+          <td style="font-size: 12px; color: var(--c-ink);">{{ c.preparacao_instrucoes or c.motivo or '—' }}</td>
+          <td style="text-align: right; font-weight: 700; color: var(--c-ink); font-family: var(--font-mono);">
+            {{ c.custo | format_pt }} €
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="font-size: 12px; color: var(--c-muted); padding: 12px 0;">Sem consultas registadas.</p>
+  {% endif %}
+</div>
+
+<!-- Secção 2: Medicamentos Ativos -->
+<div class="card mb-8" style="padding: 24px;">
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--c-ink); display: flex; align-items: center; gap: 8px;">
+        <span>💊 Medicamentos & Tratamentos Ativos</span>
+        <span style="font-size: 11px; padding: 2px 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: 9999px; color: var(--c-muted);">{{ perfil.total_medicamentos_ativos }}</span>
+      </h2>
+      <p style="font-size: 12px; color: var(--c-muted); margin-top: 2px;">Posologia e dosagens em curso.</p>
+    </div>
+  </div>
+
+  {% if perfil.medicamentos %}
+  <div style="overflow-x: auto;">
+    <table class="table-clean">
+      <thead>
+        <tr>
+          <th>Medicamento</th>
+          <th>Dosagem</th>
+          <th>Posologia</th>
+          <th>Início</th>
+          <th>Fim</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in perfil.medicamentos %}
+        <tr class="table-row-interactive">
+          <td style="font-weight: 700; color: var(--c-ink);">{{ m.nome }}</td>
+          <td style="color: var(--c-muted);">{{ m.dosagem or '—' }}</td>
+          <td style="color: var(--c-ink); font-weight: 500;">{{ m.posologia or '—' }}</td>
+          <td style="font-size: 12px; color: var(--c-muted); font-family: var(--font-mono);">{{ m.data_inicio.strftime('%d/%m/%Y') if m.data_inicio else '—' }}</td>
+          <td style="font-size: 12px; color: var(--c-muted); font-family: var(--font-mono);">{{ m.data_fim.strftime('%d/%m/%Y') if m.data_fim else '—' }}</td>
+          <td>
+            <span style="padding: 2px 8px; font-size: 11px; font-weight: 600; border-radius: 4px; {% if m.ativo %}background: rgba(22, 163, 74, 0.1); color: var(--c-positive);{% else %}background: var(--bg-surface-alt); color: var(--c-muted);{% endif %}">
+              {{ 'Ativo' if m.ativo else 'Concluído' }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="font-size: 12px; color: var(--c-muted); padding: 12px 0;">Sem medicação ativa registada.</p>
+  {% endif %}
+</div>
+
+<!-- Secção 3: Boletim de Vacinas -->
+<div class="card" style="padding: 24px;">
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--c-ink); display: flex; align-items: center; gap: 8px;">
+        <span>💉 Boletim de Vacinas</span>
+        <span style="font-size: 11px; padding: 2px 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: 9999px; color: var(--c-muted);">{{ perfil.vacinas|length }}</span>
+      </h2>
+      <p style="font-size: 12px; color: var(--c-muted); margin-top: 2px;">Registo do Plano Nacional de Vacinação e reforços.</p>
+    </div>
+  </div>
+
+  {% if perfil.vacinas %}
+  <div style="overflow-x: auto;">
+    <table class="table-clean">
+      <thead>
+        <tr>
+          <th>Vacina</th>
+          <th>Data da Toma</th>
+          <th>Próxima Dose / Reforço</th>
+          <th>Local / Lote</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in perfil.vacinas %}
+        <tr class="table-row-interactive">
+          <td style="font-weight: 700; color: var(--c-ink);">{{ v.nome_vacina }}</td>
+          <td style="font-size: 12px; color: var(--c-muted); font-family: var(--font-mono);">{{ v.data_toma.strftime('%d/%m/%Y') }}</td>
+          <td style="font-size: 12px; font-weight: 600; color: var(--c-accent-blue); font-family: var(--font-mono);">
+            {{ v.proxima_dose_data.strftime('%d/%m/%Y') if v.proxima_dose_data else 'Sem reforço previsto' }}
+          </td>
+          <td style="font-size: 12px; color: var(--c-muted);">{{ v.lote_local or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="font-size: 12px; color: var(--c-muted); padding: 12px 0;">Sem vacinas registadas.</p>
+  {% endif %}
+
+  {% if perfil.titular.tipo == 'filho' or 'charlie' in perfil.titular.nome.lower() %}
+  <!-- Guia Oficial do Plano Nacional de Vacinação (PNV) -->
+  <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--c-border);">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <h3 style="font-size: 13px; font-weight: 700; color: var(--c-ink); display: flex; items-center; gap: 6px;">
+          <span>👶 Calendário do Plano Nacional de Vacinação (PNV) — 0 aos 5 Anos</span>
+        </h3>
+        <p style="font-size: 11px; color: var(--c-muted); margin: 0;">Referência oficial da DGS para acompanhamento pediátrico do Junior.</p>
+      </div>
+      <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.1); color: var(--c-positive);">
+        Oficial DGS
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div style="padding: 12px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md);">
+        <div class="flex justify-between items-center mb-1">
+          <span style="font-size: 11px; font-weight: 700; color: var(--c-accent-blue);">🍼 2 MESES</span>
+          <span style="font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.1); color: var(--c-positive);">1ª Doses</span>
+        </div>
+        <div style="font-size: 11px; color: var(--c-ink); font-weight: 600;">Hexavalente (DTPaHibVIP), Pn13, MenB</div>
+        <div style="font-size: 10px; color: var(--c-muted); margin-top: 2px;">Difteria, Tétano, Tosse convulsa, Pólio, Haemophilus, Hepatite B, Pneumocócica, Meningite B.</div>
+      </div>
+
+      <div style="padding: 12px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md);">
+        <div class="flex justify-between items-center mb-1">
+          <span style="font-size: 11px; font-weight: 700; color: var(--c-accent-blue);">🍼 4 MESES</span>
+          <span style="font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.1); color: var(--c-positive);">2ª Doses</span>
+        </div>
+        <div style="font-size: 11px; color: var(--c-ink); font-weight: 600;">Hexavalente, Pn13, MenB</div>
+        <div style="font-size: 10px; color: var(--c-muted); margin-top: 2px;">2ª administração de reforço precoce.</div>
+      </div>
+
+      <div style="padding: 12px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md);">
+        <div class="flex justify-between items-center mb-1">
+          <span style="font-size: 11px; font-weight: 700; color: var(--c-accent-blue);">🍼 6 MESES</span>
+          <span style="font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: rgba(16, 185, 129, 0.1); color: var(--c-positive);">3ª Dose</span>
+        </div>
+        <div style="font-size: 11px; color: var(--c-ink); font-weight: 600;">Hexavalente (DTPaHibVIP)</div>
+        <div style="font-size: 10px; color: var(--c-muted); margin-top: 2px;">Conclusão da primovacinação hexavalente.</div>
+      </div>
+
+      <div style="padding: 12px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md);">
+        <div class="flex justify-between items-center mb-1">
+          <span style="font-size: 11px; font-weight: 700; color: var(--c-accent-blue);">🧸 12 MESES</span>
+          <span style="font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: rgba(13, 148, 136, 0.1); color: var(--c-accent-teal);">1 Ano</span>
+        </div>
+        <div style="font-size: 11px; color: var(--c-ink); font-weight: 600;">Pn13 (3ª dose), MenC/ACWY, MenB (3ª dose)</div>
+        <div style="font-size: 10px; color: var(--c-muted); margin-top: 2px;">Reforços de 1 ano contra infeções bacterianas graves.</div>
+      </div>
+
+      <div style="padding: 12px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md);">
+        <div class="flex justify-between items-center mb-1">
+          <span style="font-size: 11px; font-weight: 700; color: var(--c-accent-blue);">🏃 18 MESES</span>
+          <span style="font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: rgba(217, 119, 6, 0.1); color: var(--c-accent-amber);">Reforço</span>
+        </div>
+        <div style="font-size: 11px; color: var(--c-ink); font-weight: 600;">DTPaHibVIP (1º Reforço), VASPR (1ª dose)</div>
+        <div style="font-size: 10px; color: var(--c-muted); margin-top: 2px;">Sarampo, Parotidite epidémica e Rubéola.</div>
+      </div>
+
+      <div style="padding: 12px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md);">
+        <div class="flex justify-between items-center mb-1">
+          <span style="font-size: 11px; font-weight: 700; color: var(--c-accent-blue);">🎒 5 ANOS</span>
+          <span style="font-size: 9px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: rgba(147, 51, 234, 0.1); color: #a855f7;">Pré-Escolar</span>
+        </div>
+        <div style="font-size: 11px; color: var(--c-ink); font-weight: 600;">DTPaVIP (2º Reforço), VASPR (2ª dose)</div>
+        <div style="font-size: 10px; color: var(--c-muted); margin-top: 2px;">Imunização pré-escolar antes da entrada no 1º ciclo.</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal Upload Análises PDF -->
+<div id="modal-upload-analises" style="display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 16px;">
+  <div class="card" style="max-width: 480px; width: 100%; padding: 24px; box-shadow: var(--shadow-modal);">
+    <div class="flex justify-between items-center mb-4">
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--c-ink);">📤 Upload de Relatório de Análises (PDF)</h3>
+      <button onclick="document.getElementById('modal-upload-analises').style.display='none'" style="color: var(--c-muted); cursor: pointer; border: none; background: none; font-size: 16px;">✕</button>
+    </div>
+    <p style="font-size: 12px; color: var(--c-muted); margin-bottom: 14px;">O assistente processa o PDF do laboratório e extrai automaticamente a Glicemia, Colesterol, Hemograma, Vitaminas e limites de referência.</p>
+    
+    <form action="/perfis/{{ perfil.id }}/upload-analises" method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 14px;">
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Ficheiro PDF das Análises *</label>
+        <input type="file" name="ficheiro" accept=".pdf" required style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 12px; color: var(--c-ink);">
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('modal-upload-analises').style.display='none'" style="padding: 6px 12px; font-size: 12px; color: var(--c-muted); cursor: pointer; border: none; background: none;">Cancel</button>
+        <button type="submit" class="btn-primary" style="padding: 6px 16px; font-size: 12px; cursor: pointer;">Processar Análises</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Registar Biomarcador Manual -->
+<div id="modal-biomarcador" style="display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 16px;">
+  <div class="card" style="max-width: 480px; width: 100%; padding: 24px; box-shadow: var(--shadow-modal);">
+    <div class="flex justify-between items-center mb-4">
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--c-ink);">➕ Registar Parâmetro / Biomarcador</h3>
+      <button onclick="document.getElementById('modal-biomarcador').style.display='none'" style="color: var(--c-muted); cursor: pointer; border: none; background: none; font-size: 16px;">✕</button>
+    </div>
+    
+    <form action="/perfis/{{ perfil.id }}/biomarcadores" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Data *</label>
+          <input type="date" name="data" required style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Categoria</label>
+          <select name="categoria" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+            <option value="Metabolismo">Metabolismo</option>
+            <option value="Perfil Lipídico">Perfil Lipídico</option>
+            <option value="Hemograma">Hemograma</option>
+            <option value="Vitaminas">Vitaminas</option>
+            <option value="Fígado & Rins">Fígado & Rins</option>
+            <option value="Tiroide">Tiroide</option>
+            <option value="Geral">Geral</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Parâmetro / Biomarcador *</label>
+        <input type="text" name="parametro" required placeholder="Ex.: Colesterol LDL, Glicemia, Vitamina D" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Valor Medido *</label>
+          <input type="text" name="valor" required placeholder="Ex.: 95.0" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Unidade</label>
+          <input type="text" name="unidade" value="mg/dL" placeholder="mg/dL, ng/mL, %" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Ref. Mínima</label>
+          <input type="text" name="valor_referencia_min" placeholder="Ex.: 70" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Ref. Máxima</label>
+          <input type="text" name="valor_referencia_max" placeholder="Ex.: 99" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Laboratório</label>
+        <input type="text" name="laboratorio" placeholder="Ex.: Joaquim Chaves Saúde" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('modal-biomarcador').style.display='none'" style="padding: 6px 12px; font-size: 12px; color: var(--c-muted); cursor: pointer; border: none; background: none;">Cancel</button>
+        <button type="submit" class="btn-primary" style="padding: 6px 16px; font-size: 12px; cursor: pointer;">Save Biomarcador</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Edit Perfil -->
+<div id="modal-editar-perfil" style="display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 16px;">
+  <div class="card" style="max-width: 480px; width: 100%; padding: 24px; box-shadow: var(--shadow-modal);">
+    <div class="flex justify-between items-center mb-4">
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--c-ink);">Edit Perfil de {{ perfil.titular.nome }}</h3>
+      <button onclick="document.getElementById('modal-editar-perfil').style.display='none'" style="color: var(--c-muted); cursor: pointer; border: none; background: none; font-size: 16px;">✕</button>
+    </div>
+    
+    <form action="/perfis/{{ perfil.id }}/editar" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Nº Utente SNS</label>
+          <input type="text" name="numero_utente_sns" value="{{ perfil.numero_utente_sns or '' }}" placeholder="Ex.: 123456789" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Grupo Sanguíneo</label>
+          <input type="text" name="grupo_sanguineo" value="{{ perfil.grupo_sanguineo or '' }}" placeholder="Ex.: A+, O+, B-" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Data de Nascimento</label>
+        <input type="date" name="data_nascimento" value="{{ perfil.data_nascimento.strftime('%Y-%m-%d') if perfil.data_nascimento else '' }}" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+      </div>
+
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Alergias Conhecidas</label>
+        <input type="text" name="alergias" value="{{ perfil.alergias or '' }}" placeholder="Ex.: Penicilina, Pólen, Amendoim" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+      </div>
+
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Condições Crónicas / Antecedentes</label>
+        <input type="text" name="condicoes_cronicas" value="{{ perfil.condicoes_cronicas or '' }}" placeholder="Ex.: Asma, Rinite, Hipertensão" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('modal-editar-perfil').style.display='none'" style="padding: 6px 12px; font-size: 12px; color: var(--c-muted); cursor: pointer; border: none; background: none;">Cancel</button>
+        <button type="submit" class="btn-primary" style="padding: 6px 16px; font-size: 12px; cursor: pointer;">Save Perfil</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Nova Consulta -->
+<div id="modal-consulta" style="display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 16px;">
+  <div class="card" style="max-width: 480px; width: 100%; padding: 24px; box-shadow: var(--shadow-modal);">
+    <div class="flex justify-between items-center mb-4">
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--c-ink);">Registar Nova Consulta</h3>
+      <button onclick="document.getElementById('modal-consulta').style.display='none'" style="color: var(--c-muted); cursor: pointer; border: none; background: none; font-size: 16px;">✕</button>
+    </div>
+    
+    <form action="/perfis/{{ perfil.id }}/consultas" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Data *</label>
+          <input type="date" name="data" required style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Hora *</label>
+          <input type="time" name="hora" value="10:00" required style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Especialidade *</label>
+        <input type="text" name="especialidade" required placeholder="Ex.: Pediatria, Oftalmologia, Dentista" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Médico</label>
+          <input type="text" name="medico" placeholder="Ex.: Dr. Santos" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Local / Hospital</label>
+          <input type="text" name="local_clinica" placeholder="Ex.: CUF Descobertas" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Instruções / Jejum</label>
+          <input type="text" name="preparacao_instrucoes" placeholder="Ex.: Jejum 8 horas" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Custo (€)</label>
+          <input type="text" name="custo" placeholder="0.00" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('modal-consulta').style.display='none'" style="padding: 6px 12px; font-size: 12px; color: var(--c-muted); cursor: pointer; border: none; background: none;">Cancel</button>
+        <button type="submit" class="btn-primary" style="padding: 6px 16px; font-size: 12px; cursor: pointer;">Gravar Consulta</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Novo Medicamento -->
+<div id="modal-medicamento" style="display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 16px;">
+  <div class="card" style="max-width: 440px; width: 100%; padding: 24px; box-shadow: var(--shadow-modal);">
+    <div class="flex justify-between items-center mb-4">
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--c-ink);">Registar Medicamento Ativo</h3>
+      <button onclick="document.getElementById('modal-medicamento').style.display='none'" style="color: var(--c-muted); cursor: pointer; border: none; background: none; font-size: 16px;">✕</button>
+    </div>
+    
+    <form action="/perfis/{{ perfil.id }}/medicamentos" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Nome do Medicamento *</label>
+        <input type="text" name="nome" required placeholder="Ex.: Amoxicilina, Ben-u-ron" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Dosagem</label>
+          <input type="text" name="dosagem" placeholder="Ex.: 500 mg" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Posologia *</label>
+          <input type="text" name="posologia" required placeholder="Ex.: 1 comp. de 8 em 8h" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Data Início</label>
+          <input type="date" name="data_inicio" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Data Fim</label>
+          <input type="date" name="data_fim" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('modal-medicamento').style.display='none'" style="padding: 6px 12px; font-size: 12px; color: var(--c-muted); cursor: pointer; border: none; background: none;">Cancel</button>
+        <button type="submit" class="btn-primary" style="padding: 6px 16px; font-size: 12px; cursor: pointer;">Gravar Medicamento</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Nova Vacina -->
+<div id="modal-vacina" style="display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 16px;">
+  <div class="card" style="max-width: 440px; width: 100%; padding: 24px; box-shadow: var(--shadow-modal);">
+    <div class="flex justify-between items-center mb-4">
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--c-ink);">Registar Toma de Vacina</h3>
+      <button onclick="document.getElementById('modal-vacina').style.display='none'" style="color: var(--c-muted); cursor: pointer; border: none; background: none; font-size: 16px;">✕</button>
+    </div>
+    
+    <form action="/perfis/{{ perfil.id }}/vacinas" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+      <div>
+        <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Nome da Vacina *</label>
+        <input type="text" name="nome_vacina" required placeholder="Ex.: Tétano, Gripe, Meningite B" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Data da Toma *</label>
+          <input type="date" name="data_toma" required style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Próximo Reforço</label>
+          <input type="date" name="proxima_dose_data" style="width: 100%; padding: 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink);">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('modal-vacina').style.display='none'" style="padding: 6px 12px; font-size: 12px; color: var(--c-muted); cursor: pointer; border: none; background: none;">Cancel</button>
+        <button type="submit" class="btn-primary" style="padding: 6px 16px; font-size: 12px; cursor: pointer;">Gravar Vacina</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  var chartBiomarkers = null;
+
+  async function atualizarGraficoBiomarcador(parametro) {
+    if (!parametro) return;
+    try {
+      var resp = await fetch("/perfis/{{ perfil.id }}/biomarcadores/grafico-dados?parametro=" + encodeURIComponent(parametro));
+      if (!resp.ok) return;
+      var dados = await resp.json();
+      
+      var ctx = document.getElementById("chart-biomarcadores").getContext("2d");
+      if (chartBiomarkers) {
+        chartBiomarkers.destroy();
+      }
+
+      var datasets = [{
+        label: parametro + " (" + dados.unidade + ")",
+        data: dados.valores,
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37, 99, 235, 0.15)",
+        borderWidth: 3,
+        pointBackgroundColor: "#2563eb",
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        fill: true,
+        tension: 0.3
+      }];
+
+      // Adiciona linha de referência máxima se existir
+      if (dados.ref_max !== null) {
+        datasets.push({
+          label: "Limite Máx. Recomendado (" + dados.ref_max + ")",
+          data: Array(dados.labels.length).fill(dados.ref_max),
+          borderColor: "rgba(220, 38, 38, 0.6)",
+          borderWidth: 1.5,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          fill: false
+        });
+      }
+
+      // Adiciona linha de referência mínima se existir
+      if (dados.ref_min !== null) {
+        datasets.push({
+          label: "Limite Mín. Recomendado (" + dados.ref_min + ")",
+          data: Array(dados.labels.length).fill(dados.ref_min),
+          borderColor: "rgba(217, 119, 6, 0.6)",
+          borderWidth: 1.5,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          fill: false
+        });
+      }
+
+      chartBiomarkers = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: dados.labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: "#94a3b8",
+                font: { size: 11 }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: { color: "#94a3b8", font: { size: 11 } }
+            },
+            y: {
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: { color: "#94a3b8", font: { size: 11 } }
+            }
+          }
+        }
+      });
+    } catch (e) {
+      console.error("Erro ao carregar grafico de biomarcadores:", e);
+    }
+  }
+
+  function filtrarSessao(sessaoId) {
+    var cards = document.querySelectorAll(".sessao-card");
+    var btns = document.querySelectorAll(".btn-filtro-sessao");
+
+    btns.forEach(function(b) {
+      b.style.background = "var(--bg-surface-alt)";
+      b.style.color = "var(--c-muted)";
+      b.style.borderColor = "var(--c-border)";
+    });
+
+    var activeBtn = document.getElementById("btn-filtro-" + sessaoId);
+    if (activeBtn) {
+      activeBtn.style.background = "#3b82f6";
+      activeBtn.style.color = "#ffffff";
+      activeBtn.style.borderColor = "#3b82f6";
+    }
+
+    cards.forEach(function(c) {
+      if (sessaoId === "todas" || c.id === sessaoId) {
+        c.style.display = "block";
+      } else {
+        c.style.display = "none";
+      }
+    });
+  }
+
+  async function carregarMultiplo(paramsArray) {
+    if (!paramsArray || !paramsArray.length) return;
+    try {
+      var resp = await fetch("/perfis/{{ perfil.id }}/biomarcadores/grafico-multi?parametros=" + encodeURIComponent(paramsArray.join(",")));
+      if (!resp.ok) return;
+      var dados = await resp.json();
+
+      var ctx = document.getElementById("chart-biomarcadores").getContext("2d");
+      if (chartBiomarkers) {
+        chartBiomarkers.destroy();
+      }
+
+      chartBiomarkers = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: dados.labels,
+          datasets: dados.datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: {
+              display: true,
+              labels: { color: "#94a3b8", font: { size: 10, weight: 600 } }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: "#94a3b8", font: { size: 10, family: "monospace" } }
+            },
+            y: {
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: { color: "#94a3b8", font: { size: 10, family: "monospace" } }
+            }
+          }
+        }
+      });
+    } catch (e) {
+      console.error("Erro ao carregar multi-gráfico:", e);
+    }
+  }
+
+  function carregarPainelLipidico() {
+    carregarMultiplo(["Colesterol Total", "Colesterol HDL", "Colesterol LDL", "Triglicerídeos"]);
+  }
+
+  function carregarMetabolico() {
+    carregarMultiplo(["Glicemia", "Hemoglobina"]);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var select = document.getElementById("select-parametro");
+    if (select && select.value) {
+      atualizarGraficoBiomarcador(select.value);
+    }
+  });
+</script>
+{% endblock %}

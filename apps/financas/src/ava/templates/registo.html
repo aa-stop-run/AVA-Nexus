@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Registo Rápido{% endblock %}
+{% block content %}
+<style>
+  .registo-container { width: 100%; max-width: 400px; margin: 0 auto; }
+  .registo-input {
+    height: 54px;
+    width: 100%;
+    font-size: 16px;
+    border: 1px solid var(--c-border);
+    padding: 0 16px;
+    border-radius: var(--radius-md);
+    background-color: var(--c-surface);
+    color: var(--c-text);
+  }
+</style>
+<div class="registo-container">
+  <div class="flex items-center justify-center mb-6">
+    <h1 class="m-0" style="font-size: 24px;">Registo Rápido</h1>
+  </div>
+
+  <div class="card mb-5" style="padding: 24px;">
+    <div class="section-header mb-4">
+      <h2 class="section-title">Inserir Manualmente</h2>
+    </div>
+
+    {% if request.query_params.msg %}
+    {# O caminho de sucesso (registo_post, dashboard.py) começa sempre a mensagem com
+       "Registado com sucesso:" -- critério positivo, não negativo: procurar palavras como
+       "inválido"/"erro" faltava mensagens de recusa que não as contêm (ex. "Conta inválida."
+       tem género feminino e não batia em nenhuma; "A data não pode ser futura." não tem
+       nenhuma das duas palavras), e essas apareciam a verde sem nenhum movimento criado
+       (achado 2 da re-revisão). Tudo o que não é o prefixo de sucesso é tratado como erro. #}
+    <div class="mb-4 text-sm font-medium {% if request.query_params.msg.startswith('Registado com sucesso') %}text-positive{% else %}text-negative{% endif %}" style="padding: 12px; background: var(--c-border-light); border-radius: 8px;">
+      {{ request.query_params.msg }}
+    </div>
+    {% endif %}
+
+    <form method="post" action="/registo" class="flex flex-col gap-5">
+      <label class="text-sm">
+        <span class="block text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Cartão de Refeição</span>
+        <select name="conta_id" class="registo-input">
+          {% for c in contas %}
+              <option value="{{ c.id }}" {% if selected_conta == c.id|string %}selected{% endif %}>{{ c.nome }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="text-sm">
+        <span class="block text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Tipo</span>
+        <select name="tipo" class="registo-input">
+          <option value="despesa" {% if selected_tipo == 'despesa' %}selected{% endif %}>Despesa</option>
+          <option value="rendimento" {% if selected_tipo == 'rendimento' %}selected{% endif %}>Rendimento</option>
+        </select>
+      </label>
+
+      <label class="text-sm">
+        <span class="block text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Categoria (Opcional)</span>
+        <select name="categoria_id" class="registo-input">
+          <option value="">-- Deixar Pendente para Auto-Categorizar --</option>
+          {% for grupo, categorias in grupos %}
+          <optgroup label="{{ grupo.nome }}">
+              {% for cat in categorias %}
+              <option value="{{ cat.id }}">{{ cat.nome }}</option>
+              {% endfor %}
+          </optgroup>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="text-sm">
+        <span class="block text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Montante (€)</span>
+        <input
+          type="number" name="valor" step="0.01" min="0.01" placeholder="Ex: 20.50"
+          class="registo-input" required
+        >
+      </label>
+
+      <label class="text-sm">
+        <span class="block text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Descrição (Opcional)</span>
+        <input
+          type="text" name="descricao" placeholder="Ex: Tabaco"
+          class="registo-input"
+        >
+      </label>
+
+      <div>
+        <label class="block text-[12px] font-bold text-muted uppercase tracking-wider mb-2" for="registo-data">Data</label>
+        <input
+          id="registo-data" type="date" name="data" value="{{ hoje }}" max="{{ hoje }}"
+          class="registo-input"
+        />
+        <p class="text-xs text-muted mt-1">
+          A data em que gastaste, não a de hoje se forem diferentes — é ela que permite casar
+          este movimento com a linha do extrato quando ele chegar.
+        </p>
+      </div>
+
+      <button type="submit" class="btn-primary" style="height: 54px; font-size: 16px; margin-top: 10px; border-radius: var(--radius-md);">Registar</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

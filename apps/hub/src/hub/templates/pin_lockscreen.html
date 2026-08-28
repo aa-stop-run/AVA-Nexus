@@ -1,0 +1,200 @@
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- STARK HUD CYBERNETIC PIN LOCKSCREEN (4 DÍGITOS // SEGURANÇA AVA)   -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="pin-lockscreen-modal" class="{% if autenticado %}hidden{% else %}flex{% endif %} fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-2xl flex-col items-center justify-center p-4 select-none transition-all duration-300">
+    <div class="w-full max-w-xs hud-panel hud-bracket p-6 border border-cyan-500/40 bg-slate-900/90 shadow-[0_0_50px_rgba(6,182,212,0.25)] flex flex-col items-center text-center">
+        
+        <!-- Header com Brasão AVA Nexus -->
+        <img src="/static/icons/icon-192.png" alt="AVA Nexus" class="w-16 h-16 rounded-2xl shadow-xl shadow-cyan-500/30 border border-cyan-400/40 mb-3 hover:scale-105 transition-transform object-cover">
+
+        <h2 class="text-white font-bold font-mono text-sm tracking-widest uppercase">SEGURANÇA EXECUTIVA</h2>
+        <p id="pin-status-message" class="text-cyan-300 text-xs font-mono mt-1 min-h-[1.25rem]">Enter PIN de 4 dígitos</p>
+
+        <!-- Indicadores de Dígitos (4 Pontos Cibernéticos) -->
+        <div id="pin-dots-container" class="flex items-center justify-center space-x-3.5 my-6">
+            <div id="pin-dot-1" class="w-4 h-4 rounded-full border-2 border-cyan-500/40 bg-slate-950 transition-all duration-150"></div>
+            <div id="pin-dot-2" class="w-4 h-4 rounded-full border-2 border-cyan-500/40 bg-slate-950 transition-all duration-150"></div>
+            <div id="pin-dot-3" class="w-4 h-4 rounded-full border-2 border-cyan-500/40 bg-slate-950 transition-all duration-150"></div>
+            <div id="pin-dot-4" class="w-4 h-4 rounded-full border-2 border-cyan-500/40 bg-slate-950 transition-all duration-150"></div>
+        </div>
+
+        <!-- Teclado Numérico Stark HUD (Touch & Click) -->
+        <div class="grid grid-cols-3 gap-3 w-full font-mono text-lg font-bold">
+            <button type="button" onclick="keypadPress('1')" class="h-12 rounded-xl bg-slate-950/80 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/50 text-white active:scale-95 transition-all cursor-pointer shadow-sm">1</button>
+            <button type="button" onclick="keypadPress('2')" class="h-12 rounded-xl bg-slate-950/80 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/50 text-white active:scale-95 transition-all cursor-pointer shadow-sm">2</button>
+            <button type="button" onclick="keypadPress('3')" class="h-12 rounded-xl bg-slate-950/80 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/50 text-white active:scale-95 transition-all cursor-pointer shadow-sm">3</button>
+
+            <button type="button" onclick="keypadPress('4')" class="h-12 rounded-xl bg-slate-950/80 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/50 text-white active:scale-95 transition-all cursor-pointer shadow-sm">4</button>
+            <button type="button" onclick="keypadPress('5')" class="h-12 rounded-xl bg-slate-950/80 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/50 text-white active:scale-95 transition-all cursor-pointer shadow-sm">5</button>
+            <button type="button" onclick="keypadPress('6')" class="h-12 rounded-xl bg-slate-950/80 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/50 text-white active:scale-95 transition-all cursor-pointer shadow-sm">6</button>
+
+            <button type="button" onclick="keypadPress('7')" class="h-12 rounded-xl bg-slate-950/80 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/50 text-white active:scale-95 transition-all cursor-pointer shadow-sm">7</button>
+            <button type="button" onclick="keypadPress('8')" class="h-12 rounded-xl bg-slate-950/80 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/50 text-white active:scale-95 transition-all cursor-pointer shadow-sm">8</button>
+            <button type="button" onclick="keypadPress('9')" class="h-12 rounded-xl bg-slate-950/80 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/50 text-white active:scale-95 transition-all cursor-pointer shadow-sm">9</button>
+
+            <button type="button" onclick="keypadClear()" class="h-12 rounded-xl bg-slate-950/80 border border-slate-700/50 hover:border-slate-500 text-slate-400 hover:text-white text-xs uppercase tracking-wider active:scale-95 transition-all cursor-pointer">LIMPAR</button>
+            <button type="button" onclick="keypadPress('0')" class="h-12 rounded-xl bg-slate-950/80 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/50 text-white active:scale-95 transition-all cursor-pointer shadow-sm">0</button>
+            <button type="button" onclick="keypadBackspace()" class="h-12 rounded-xl bg-slate-950/80 border border-slate-700/50 hover:border-rose-500/50 text-slate-400 hover:text-rose-300 text-base active:scale-95 transition-all cursor-pointer">⌫</button>
+        </div>
+
+        <!-- Rodapé de Estado -->
+        <div class="mt-5 pt-3 border-t border-cyan-500/10 w-full flex items-center justify-between text-[9px] font-mono text-slate-500">
+            <span>TAILSCALE ENCRYPTED</span>
+            <span>NODE 02 // LEXIUS</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPinInput = '';
+    let isVerifying = false;
+
+    function keypadPress(digit) {
+        if (isVerifying || currentPinInput.length >= 4) return;
+        if (navigator.vibrate) navigator.vibrate(20);
+        currentPinInput += digit;
+        updatePinDots();
+
+        if (currentPinInput.length === 4) {
+            submitPinVerification();
+        }
+    }
+
+    function keypadBackspace() {
+        if (isVerifying || currentPinInput.length === 0) return;
+        if (navigator.vibrate) navigator.vibrate(15);
+        currentPinInput = currentPinInput.slice(0, -1);
+        updatePinDots();
+    }
+
+    function keypadClear() {
+        if (isVerifying) return;
+        currentPinInput = '';
+        updatePinDots();
+        const msg = document.getElementById('pin-status-message');
+        if (msg) {
+            msg.innerText = 'Enter PIN de 4 dígitos';
+            msg.className = 'text-cyan-300 text-xs font-mono mt-1 min-h-[1.25rem]';
+        }
+    }
+
+    function updatePinDots() {
+        for (let i = 1; i <= 4; i++) {
+            const dot = document.getElementById(`pin-dot-${i}`);
+            if (!dot) continue;
+            if (i <= currentPinInput.length) {
+                dot.className = 'w-4 h-4 rounded-full border-2 border-cyan-300 bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.8)] scale-110 transition-all duration-150';
+            } else {
+                dot.className = 'w-4 h-4 rounded-full border-2 border-cyan-500/40 bg-slate-950 transition-all duration-150';
+            }
+        }
+    }
+
+    async function submitPinVerification() {
+        isVerifying = true;
+        const msg = document.getElementById('pin-status-message');
+        if (msg) {
+            msg.innerText = 'A VERIFICAR CREDENCIAIS...';
+            msg.className = 'text-amber-300 text-xs font-mono mt-1 animate-pulse min-h-[1.25rem]';
+        }
+
+        try {
+            const res = await fetch('/api/auth/pin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pin: currentPinInput })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+                // Sucesso: animar verde e desbloquear
+                for (let i = 1; i <= 4; i++) {
+                    const dot = document.getElementById(`pin-dot-${i}`);
+                    if (dot) dot.className = 'w-4 h-4 rounded-full border-2 border-emerald-400 bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)] scale-110';
+                }
+                const nome = (data.user && data.user.nome) ? data.user.nome : 'UTILIZADOR';
+                if (msg) {
+                    msg.innerText = `ACESSO AUTORIZADO // BEM-VINDO(A), ${nome.toUpperCase()}!`;
+                    msg.className = 'text-emerald-400 text-xs font-mono mt-1 font-bold min-h-[1.25rem]';
+                }
+
+                // Limpa qualquer cache de navegação da PWA no cliente para garantir que entra direto sem segundo pedido de PIN
+                if ('caches' in window) {
+                    try {
+                        const keys = await caches.keys();
+                        for (const k of keys) {
+                            const c = await caches.open(k);
+                            await c.delete('/');
+                        }
+                    } catch (e) {}
+                }
+
+                setTimeout(() => {
+                    const modal = document.getElementById('pin-lockscreen-modal');
+                    if (modal) {
+                        modal.classList.add('opacity-0', 'pointer-events-none');
+                    }
+                    window.location.replace('/');
+                }, 350);
+            } else {
+                // Erro: animar vermelho e reset
+                if (navigator.vibrate) navigator.vibrate([60, 50, 60]);
+                for (let i = 1; i <= 4; i++) {
+                    const dot = document.getElementById(`pin-dot-${i}`);
+                    if (dot) dot.className = 'w-4 h-4 rounded-full border-2 border-rose-500 bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]';
+                }
+                if (msg) {
+                    msg.innerText = 'PIN INCORRETO. TENTA NOVAMENTE.';
+                    msg.className = 'text-rose-400 text-xs font-mono mt-1 font-bold animate-bounce min-h-[1.25rem]';
+                }
+
+                setTimeout(() => {
+                    currentPinInput = '';
+                    updatePinDots();
+                    isVerifying = false;
+                    if (msg) {
+                        msg.innerText = 'Enter PIN de 4 dígitos';
+                        msg.className = 'text-cyan-300 text-xs font-mono mt-1 min-h-[1.25rem]';
+                    }
+                }, 700);
+            }
+        } catch (e) {
+            isVerifying = false;
+            if (msg) {
+                msg.innerText = 'ERRO DE COMUNICAÇÃO.';
+                msg.className = 'text-rose-400 text-xs font-mono mt-1 min-h-[1.25rem]';
+            }
+        }
+    }
+
+    async function lockCockpit() {
+        if ('caches' in window) {
+            try {
+                const keys = await caches.keys();
+                for (const k of keys) {
+                    const c = await caches.open(k);
+                    await c.delete('/');
+                }
+            } catch (e) {}
+        }
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (e) {}
+        window.location.replace('/');
+    }
+
+    // Suporte a teclado físico (números 0-9, backspace e enter)
+    window.addEventListener('keydown', (e) => {
+        const modal = document.getElementById('pin-lockscreen-modal');
+        if (!modal || modal.classList.contains('hidden') || modal.classList.contains('opacity-0')) return;
+
+        if (e.key >= '0' && e.key <= '9') {
+            keypadPress(e.key);
+        } else if (e.key === 'Backspace') {
+            keypadBackspace();
+        } else if (e.key === 'Escape') {
+            keypadClear();
+        }
+    });
+</script>

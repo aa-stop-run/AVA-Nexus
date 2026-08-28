@@ -1,0 +1,306 @@
+﻿<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cidadania, Documentos & Tax Deadlines — AVA</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <style>
+    .aurora-mesh {
+      position: fixed;
+      top: 0; left: 0; right: 0; height: 350px;
+      background: radial-gradient(circle at 50% -20%, rgba(139, 92, 246, 0.15), rgba(56, 189, 248, 0.05) 50%, transparent 80%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+    }
+    .copy-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #94a3b8;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.15);
+    }
+  </style>
+</head>
+<body style="background: #07090e; color: #f8fafc;">
+  <div class="aurora-mesh"></div>
+
+  <!-- Header & Navigation -->
+  <header style="border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(7, 9, 14, 0.85); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 40;">
+    <div style="max-width: 1300px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6, #38bdf8); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+          🪪
+        </div>
+        <div>
+          <div style="font-size: 16px; font-weight: 700; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px;">
+            <span>AVA Citizenship & Taxes</span>
+            <span style="font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(139, 92, 246, 0.15); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3);">Agregado Familiar</span>
+          </div>
+          <div style="font-size: 11px; color: #94a3b8;">Expiry Dates de Identificação, Números Rápidos & Calendário Fiscal PT</div>
+        </div>
+      </div>
+
+      <!-- App Ecosystem Switcher -->
+      <nav style="display: flex; align-items: center; gap: 8px;">
+        <a href="http://localhost:8088/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: none; border: 1px solid rgba(255,255,255,0.06);" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#94a3b8';">🌐 Hub Cockpit</a>
+        <a href="http://localhost:8081/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: none; border: 1px solid rgba(255,255,255,0.06);" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#94a3b8';">💶 Finanças</a>
+        <a href="http://localhost:8082/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: none; border: 1px solid rgba(255,255,255,0.06);" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#94a3b8';">🚗 Veículos</a>
+        <a href="http://localhost:8083/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: none; border: 1px solid rgba(255,255,255,0.06);" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#94a3b8';">🩺 Saúde</a>
+        <a href="http://localhost:8084/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; text-decoration: none; border: 1px solid rgba(255,255,255,0.06);" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#94a3b8';">🏠 Casa</a>
+        <a href="http://localhost:8085/" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: #c084fc; text-decoration: none; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3);">🪪 Cidadania</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main style="max-width: 1300px; margin: 0 auto; padding: 24px; position: relative; z-index: 10;">
+
+    <!-- Top KPI Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 28px;">
+      <div class="hud-glass" style="padding: 18px 20px;">
+        <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Documentos Registados</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: #f8fafc;">{{ total_documentos }}</div>
+        <div style="font-size: 11px; color: #c084fc; margin-top: 4px;">aa-stop-run, Member e Junior</div>
+      </div>
+
+      <div class="hud-glass hud-glow-emerald" style="padding: 18px 20px;">
+        <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Expiry Dates Regulares</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: #10b981;">{{ docs_validos }}</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">> 6 meses de validade</div>
+      </div>
+
+      <div class="hud-glass {% if docs_a_expirar > 0 %}hud-glow-amber{% endif %}" style="padding: 18px 20px;">
+        <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">A Renovar em Breve</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: {% if docs_a_expirar > 0 %}#f59e0b{% else %}#94a3b8{% endif %};">{{ docs_a_expirar }}</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">< 180 days remaining</div>
+      </div>
+
+      <div class="hud-glass hud-glow-cyan" style="padding: 18px 20px;">
+        <div style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Obrigações Fiscais</div>
+        <div style="font-size: 28px; font-weight: 700; margin-top: 4px; color: #38bdf8;">{{ total_obrigacoes }}</div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Calendário Tributário AT 2026/2027</div>
+      </div>
+    </div>
+
+    <!-- Section: Dossier de Identity Documents Familiar -->
+    <div style="margin-bottom: 36px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 700; margin: 0; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+            <span>🪪 Dossier de Identidade & Documentos Pessoais</span>
+          </h2>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">Números oficiais para preenchimento rápido de formulários e controlo de prazos de renovação.</div>
+        </div>
+        <button onclick="document.getElementById('modal-novo-doc').style.display='flex'" class="btn-primary">
+          ➕ Add Documento
+        </button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px;">
+        {% for doc in documentos %}
+        <div class="hud-glass" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; border-top: 3px solid {% if doc.titular_nome == 'aa-stop-run' %}#38bdf8{% elif doc.titular_nome == 'Member' %}#ec4899{% else %}#10b981{% endif %};">
+          <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: {% if doc.titular_nome == 'aa-stop-run' %}#38bdf8{% elif doc.titular_nome == 'Member' %}#ec4899{% else %}#10b981{% endif %};">
+                👤 {{ doc.titular_nome }}
+              </span>
+
+              <!-- Badge de Expiry Date -->
+              {% if doc.estado_validade == 'vitalicio' %}
+                <span class="hud-badge" style="background: rgba(255,255,255,0.06); color: #94a3b8;">
+                  Permanente
+                </span>
+              {% elif doc.estado_validade == 'valido' %}
+                <span class="hud-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
+                  ✓ Válido ({{ doc.dias_restantes }}d)
+                </span>
+              {% elif doc.estado_validade == 'a_expirar' %}
+                <span class="hud-badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">
+                  ⚠️ Renovar ({{ doc.dias_restantes }}d)
+                </span>
+              {% else %}
+                <span class="hud-badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
+                  Caducado
+                </span>
+              {% endif %}
+            </div>
+
+            <div style="font-size: 14px; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">
+              {{ doc.nome_legivel }}
+            </div>
+
+            <!-- Número com botão de cópia -->
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <span style="font-family: monospace; font-size: 15px; font-weight: 700; color: #38bdf8; letter-spacing: 0.05em;" id="num-{{ loop.index }}">{{ doc.numero }}</span>
+              <button class="copy-btn" onclick="navigator.clipboard.writeText('{{ doc.numero }}'); this.innerText='Copiado!'; setTimeout(() => this.innerText='Copiar', 1500);">Copiar</button>
+            </div>
+
+            {% if doc.data_validade %}
+            <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between;">
+              <span>Expiry Date: <strong style="color: #cbd5e1;">{{ doc.data_validade }}</strong></span>
+              <span>Emissor: {{ doc.entidade_emissora or 'República Portuguesa' }}</span>
+            </div>
+            {% endif %}
+
+            {% if doc.notas %}
+            <div style="font-size: 11px; color: #64748b; margin-top: 6px;">
+              {{ doc.notas }}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Section: Calendário Fiscal Português -->
+    <div style="margin-bottom: 36px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 700; margin: 0; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+            <span>🏛️ Calendário Fiscal & Obrigações Tributárias (AT)</span>
+          </h2>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">Prazos legais para IRS, validação de faturas no e-fatura, IMI e impostos municipais.</div>
+        </div>
+      </div>
+
+      <div class="hud-glass" style="overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.3); color: #94a3b8; font-size: 11px; text-transform: uppercase;">
+              <th style="padding: 14px 18px;">Obrigação Fiscal</th>
+              <th style="padding: 14px 18px;">Categoria</th>
+              <th style="padding: 14px 18px;">Ano Fiscal</th>
+              <th style="padding: 14px 18px;">Data Limite</th>
+              <th style="padding: 14px 18px;">Valor Estimado</th>
+              <th style="padding: 14px 18px;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ob in obrigacoes %}
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)';" onmouseout="this.style.background='transparent';">
+              <td style="padding: 14px 18px; font-weight: 600; color: #f8fafc;">
+                <div>{{ ob.nome }}</div>
+                {% if ob.detalhes %}<div style="font-size: 11px; color: #64748b; font-weight: normal;">{{ ob.detalhes }}</div>{% endif %}
+              </td>
+              <td style="padding: 14px 18px;">
+                <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06); color: #cbd5e1;">
+                  {{ ob.categoria }}
+                </span>
+              </td>
+              <td style="padding: 14px 18px; color: #cbd5e1;">{{ ob.ano_fiscal }}</td>
+              <td style="padding: 14px 18px; font-weight: 600; color: #38bdf8;">
+                📅 {{ ob.data_limite }}
+                <div style="font-size: 10px; color: #94a3b8; font-weight: normal;">({{ ob.dias_restantes }} days remaining)</div>
+              </td>
+              <td style="padding: 14px 18px; color: #f8fafc; font-weight: 600;">
+                {% if ob.valor_estimado %}
+                  {{ ob.valor_estimado }} €
+                {% else %}
+                  <span style="color: #94a3b8;">--</span>
+                {% endif %}
+              </td>
+              <td style="padding: 14px 18px;">
+                {% if ob.pago %}
+                  <span class="hud-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">Liquidado</span>
+                {% elif ob.estado == 'urgente' %}
+                  <span class="hud-badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">Urgente</span>
+                {% else %}
+                  <span class="hud-badge" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.2);">Agendado</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal Novo Documento de Identificação -->
+  <div id="modal-novo-doc" class="modal-overlay">
+    <div class="hud-glass" style="width: 100%; max-width: 500px; padding: 24px; background: #0f172a; border: 1px solid rgba(139, 92, 246, 0.3);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 16px; font-weight: 700; margin: 0;">➕ Novo Documento de Identificação</h3>
+        <button onclick="document.getElementById('modal-novo-doc').style.display='none'" style="background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
+      </div>
+
+      <form action="/api/cidadania/documentos" method="POST" style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Titular *</label>
+            <select name="titular_nome" style="width: 100%; padding: 8px 12px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+              <option value="aa-stop-run">aa-stop-run</option>
+              <option value="Member">Member</option>
+              <option value="Junior">Pedro Junior</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Tipo de Documento *</label>
+            <select name="tipo" style="width: 100%; padding: 8px 12px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+              <option value="cartao_cidadao">Cartão de Cidadão</option>
+              <option value="carta_conducao">Carta de Condução</option>
+              <option value="passaporte">Passaporte Eletrónico</option>
+              <option value="cesd">Cartão Europeu Seguro Doença</option>
+              <option value="nif">NIF</option>
+              <option value="niss">NISS</option>
+              <option value="sns">Nº Utente SNS</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Número do Documento *</label>
+          <input type="text" name="numero" required placeholder="Ex.: 14820194 8 ZX9" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Data de Emissão</label>
+            <input type="date" name="data_emissao" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+          <div>
+            <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Data de Expiry Date</label>
+            <input type="date" name="data_validade" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Entidade Emissora</label>
+          <input type="text" name="entidade_emissora" value="IRN, IP" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+        </div>
+
+        <div>
+          <label style="font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px;">Notas</label>
+          <input type="text" name="notas" placeholder="Anotações adicionais" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; box-sizing: border-box;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" onclick="document.getElementById('modal-novo-doc').style.display='none'" style="padding: 8px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #94a3b8; cursor: pointer;">Cancel</button>
+          <button type="submit" class="btn-primary">Save Documento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

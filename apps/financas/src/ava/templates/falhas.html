@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Falhas de ingestão{% endblock %}
+{% block content %}
+<h1>Falhas de ingestão</h1>
+<table>
+  <thead><tr><th>Item</th><th>Erro</th><th>Desde</th></tr></thead>
+  <tbody>
+    {% for item in itens %}
+    <tr>
+      <td>{{ item.id }}</td>
+      <td>{{ (item.resultado_json or {}).get('erro', '—') }}</td>
+      <td>{{ item.criado_em }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

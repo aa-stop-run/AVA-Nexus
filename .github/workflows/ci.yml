@@ -1,0 +1,36 @@
+﻿name: AVA Nexus CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-ecosystem:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio respx httpx
+        pip install -e ./apps/hub -e ./apps/saude -e ./apps/veiculos -e ./apps/casa -e ./apps/cidadania
+
+    - name: Run Test Suites
+      run: |
+        pytest apps/hub/tests
+        pytest apps/saude/tests
+        pytest apps/veiculos/tests
+        pytest apps/casa/tests
+        pytest apps/cidadania/tests

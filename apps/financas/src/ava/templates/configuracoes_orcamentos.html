@@ -1,0 +1,69 @@
+{% extends "configuracoes_layout.html" %}
+
+{% block config_content %}
+<div class="card p-6 mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h2 class="text-lg font-bold text-ink">Orçamentos Mensais</h2>
+      <p class="text-sm text-muted">Defina o limite de gastos para cada grupo de categorias.</p>
+    </div>
+  </div>
+
+  {% if erro %}
+  <div class="mb-4 text-sm font-medium text-negative p-3 bg-[rgba(239,68,68,0.1)] rounded-md">
+    {{ erro }}
+  </div>
+  {% endif %}
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="border-b border-border">
+          <th class="py-3 px-4 text-xs font-bold text-muted uppercase tracking-wider">Grupo</th>
+          <th class="py-3 px-4 text-xs font-bold text-muted uppercase tracking-wider">Mês Atual</th>
+          <th class="py-3 px-4 text-xs font-bold text-muted uppercase tracking-wider text-right">Limite Mensal (€)</th>
+          <th class="py-3 px-4 w-20"></th>
+        </tr>
+      </thead>
+      <tbody class="text-sm divide-y divide-border">
+        {% for obj in orcamentos_info %}
+        <tr class="hover:bg-[rgba(0,0,0,0.02)] transition-colors">
+          <td class="py-3 px-4 font-medium text-ink">{{ obj.grupo.nome }}</td>
+          <td class="py-3 px-4 text-muted">{{ mes }}/{{ ano }}</td>
+          <td class="py-3 px-4 text-right font-medium">
+            {% if obj.orcamento %}
+              {{ obj.orcamento.limite_mensal | format_pt }}
+            {% else %}
+              <span class="text-muted italic">Não definido</span>
+            {% endif %}
+          </td>
+          <td class="py-3 px-4 text-right">
+            <button type="button" class="btn-secondary py-1 px-3 text-xs" onclick="document.getElementById('edit-orcamento-{{ obj.grupo.id }}').showModal()">Edit</button>
+          </td>
+        </tr>
+
+        <!-- Dialog Edit -->
+        <dialog id="edit-orcamento-{{ obj.grupo.id }}" class="card p-6 w-full max-w-sm rounded-lg shadow-xl backdrop:bg-black/50">
+          <form method="post" action="/configuracoes/orcamentos" class="flex flex-col gap-4">
+            <h3 class="font-bold text-lg m-0">Orçamento: {{ obj.grupo.nome }}</h3>
+            <input type="hidden" name="grupo_id" value="{{ obj.grupo.id }}">
+            <input type="hidden" name="ano" value="{{ ano }}">
+            <input type="hidden" name="mes" value="{{ mes }}">
+            
+            <label class="block">
+              <span class="block text-sm font-medium text-muted mb-1">Limite (€)</span>
+              <input type="number" step="0.01" min="0" name="limite_mensal" class="form-input w-full" value="{{ obj.orcamento.limite_mensal if obj.orcamento else '' }}" required>
+            </label>
+            
+            <div class="flex justify-end gap-3 mt-4">
+              <button type="button" class="btn-secondary" onclick="this.closest('dialog').close()">Cancel</button>
+              <button type="submit" class="btn-primary">Save</button>
+            </div>
+          </form>
+        </dialog>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

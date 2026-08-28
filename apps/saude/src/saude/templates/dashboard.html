@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Saúde Familiar & Health Dossier — AVA{% endblock %}
+
+{% block content %}
+<div class="dashboard-header flex justify-between items-center mb-6">
+  <div>
+    <h1 class="page-title">Saúde Familiar</h1>
+    <p style="font-size: var(--font-xs); color: var(--c-muted); margin-top: 2px;">Dossiers clínicos, agenda de consultas, prescrições ativas e exames.</p>
+  </div>
+  <div class="flex gap-2">
+    <button onclick="document.getElementById('modal-importar-email').style.display='flex'" class="btn-primary" style="background: var(--bg-surface-alt); color: var(--c-ink); border: 1px solid var(--c-border); cursor: pointer;">
+      📋 Colar Texto de Email
+    </button>
+    <form action="/sincronizar" method="post">
+      <button type="submit" class="btn-primary" style="cursor: pointer;">
+        🔄 Sincronizar Emails
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- KPIs Gerais de Saúde -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+  <div class="card" style="padding: 18px 20px;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Membros Familiares</div>
+    <div style="font-size: 26px; font-weight: 700; color: var(--c-ink);">{{ perfis|length }}</div>
+    <div style="font-size: 11px; color: var(--c-muted); margin-top: 4px;">aa-stop-run, Member e Junior</div>
+  </div>
+
+  <div class="card" style="padding: 18px 20px;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: var(--c-accent-blue); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Consultas Agendadas</div>
+    <div style="font-size: 26px; font-weight: 700; color: var(--c-accent-blue);">{{ total_consultas_agendadas }}</div>
+    <div style="font-size: 11px; color: var(--c-muted); margin-top: 4px;">Próximos compromissos médicos</div>
+  </div>
+
+  <a href="/medicamentos" class="card" style="padding: 18px 20px; text-decoration: none; display: block;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: var(--c-accent-blue); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Pharmacy & Stock ↗</div>
+    <div style="font-size: 26px; font-weight: 700; color: var(--c-ink);">{{ total_medicamentos_ativos }}</div>
+    <div style="font-size: 11px; color: var(--c-muted); margin-top: 4px;">Gerir tomas, stock e receitas</div>
+  </a>
+</div>
+
+<!-- Grelha de Perfis Familiares -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  {% for perfil in perfis %}
+  {% set t = perfil.titular %}
+  <div class="card flex flex-col justify-between" style="padding: 20px;">
+    <div>
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-accent-teal); background: rgba(13, 148, 136, 0.1); padding: 2px 8px; border-radius: 4px;">
+            {% if t.tipo == 'filho' %}👶 Filho{% elif t.tipo == 'conjuge' %}👩 Cônjuge{% else %}👤 Titular{% endif %}
+          </span>
+          <h2 style="font-size: 20px; font-weight: 700; color: var(--c-ink); margin-top: 8px;">{{ t.nome }}</h2>
+          <div style="font-size: 12px; color: var(--c-muted);">
+            SNS: <span style="font-family: var(--font-mono); font-weight: 600; color: var(--c-ink);">{{ perfil.numero_utente_sns or 'Não definido' }}</span>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 14px; font-weight: 700; color: var(--c-accent-blue); padding: 2px 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: 6px;">
+            {{ perfil.grupo_sanguineo or 'Grupo ?' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Resumo Rápido -->
+      <div style="margin: 14px 0; padding-top: 12px; border-top: 1px solid var(--c-border); font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div class="flex justify-between items-center">
+          <span style="color: var(--c-muted);">Consultas:</span>
+          <span style="font-weight: 600; color: var(--c-ink);">{{ perfil.consultas|length }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span style="color: var(--c-muted);">Medicamentos Ativos:</span>
+          <span style="font-weight: 600; color: var(--c-accent-blue);">{{ perfil.total_medicamentos_ativos }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span style="color: var(--c-muted);">Alergias:</span>
+          <span style="font-weight: 500; color: {% if perfil.alergias %}var(--c-negative){% else %}var(--c-muted){% endif %};">
+            {{ perfil.alergias or 'Nenhuma registada' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding-top: 14px; border-top: 1px solid var(--c-border);">
+      <a href="/perfis/{{ perfil.id }}" style="display: block; width: 100%; padding: 8px 0; background: var(--bg-surface-alt); border: 1px solid var(--c-border); text-align: center; font-size: 12px; font-weight: 600; border-radius: var(--radius-md); color: var(--c-ink); text-decoration: none;">
+        Abrir Health Dossier →
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Próximas Consultas Agendadas da Família -->
+<div class="card" style="padding: 24px;">
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--c-ink); display: flex; items-center; gap: 8px;">
+        <span>📅 Próximas Consultas & Exames Agendados</span>
+        <span style="font-size: 11px; padding: 2px 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: 9999px; color: var(--c-muted);">{{ consultas_futuras|length }}</span>
+      </h2>
+      <p style="font-size: 12px; color: var(--c-muted); margin-top: 2px;">Compromissos médicos capturados por email ou registados manualmente.</p>
+    </div>
+  </div>
+
+  {% if consultas_futuras %}
+  <div style="overflow-x: auto;">
+    <table class="table-clean">
+      <thead>
+        <tr>
+          <th>Data & Hora</th>
+          <th>Paciente</th>
+          <th>Especialidade</th>
+          <th>Médico</th>
+          <th>Local / Hospital</th>
+          <th>Instruções / Jejum</th>
+          <th style="text-align: right;">Custo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in consultas_futuras %}
+        <tr class="table-row-interactive">
+          <td style="font-size: 12px; color: var(--c-muted); font-family: var(--font-mono); font-weight: 600;">
+            {{ c.data_hora.strftime('%d/%m/%Y às %H:%M') }}
+          </td>
+          <td>
+            <span style="font-weight: 700; color: var(--c-ink);">{{ c.perfil.titular.nome }}</span>
+          </td>
+          <td>
+            <span style="padding: 2px 8px; font-size: 11px; font-weight: 600; background: rgba(37, 99, 235, 0.1); color: var(--c-accent-blue); border-radius: 4px;">
+              {{ c.especialidade }}
+            </span>
+          </td>
+          <td style="color: var(--c-ink);">{{ c.medico or '—' }}</td>
+          <td style="font-size: 12px; color: var(--c-muted);">{{ c.local_clinica or '—' }}</td>
+          <td style="font-size: 12px; color: var(--c-accent-amber);">{{ c.preparacao_instrucoes or '—' }}</td>
+          <td style="text-align: right; font-weight: 700; color: var(--c-ink); font-family: var(--font-mono);">
+            {{ c.custo | format_pt }} €
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="font-size: 12px; color: var(--c-muted); padding: 12px 0;">Não existem consultas agendadas para breve.</p>
+  {% endif %}
+</div>
+
+<!-- Modal Colar Texto de Email -->
+<div id="modal-importar-email" style="display: none; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 16px;">
+  <div class="card" style="max-width: 520px; width: 100%; padding: 24px; box-shadow: var(--shadow-modal);">
+    <div class="flex justify-between items-center mb-4">
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--c-ink);">📥 Importar Marcação por Texto de Email</h3>
+      <button onclick="document.getElementById('modal-importar-email').style.display='none'" style="color: var(--c-muted); cursor: pointer; border: none; background: none; font-size: 16px;">✕</button>
+    </div>
+    <p style="font-size: 12px; color: var(--c-muted); margin-bottom: 12px;">Cola o texto do email de confirmação recebido da CUF, Hospital da Luz, Lusíadas ou SNS para extrair os dados automaticamente.</p>
+    
+    <form action="/importar-texto" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+      <div>
+        <textarea name="texto_email" rows="6" required placeholder="Ex.: Confirmamos a sua marcação de Consulta de Oftalmologia com o Dr. Santos no dia 15/10/2026 às 10:30 no Hospital CUF Descobertas..." style="width: 100%; padding: 10px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md); font-size: 13px; color: var(--c-ink); font-family: inherit;"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('modal-importar-email').style.display='none'" style="padding: 6px 12px; font-size: 12px; color: var(--c-muted); cursor: pointer; border: none; background: none;">Cancel</button>
+        <button type="submit" class="btn-primary" style="padding: 6px 16px; font-size: 12px; cursor: pointer;">Extrair & Registar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

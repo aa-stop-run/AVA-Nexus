@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Insights{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+  <div class="flex items-center gap-4">
+    <h1 class="m-0">Insights</h1>
+    <div class="period-pill">
+      <a href="/insights?periodo={{ periodo_anterior }}" title="Mês anterior">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" /></svg>
+      </a>
+      <span>{{ periodo }}</span>
+      <a href="/insights?periodo={{ periodo_seguinte }}" title="Mês seguinte">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+      </a>
+    </div>
+  </div>
+  {% if not esta_no_mes_atual %}
+  <a href="/insights" class="btn-primary" style="font-size: 12px; padding: 6px 12px; opacity: 0.8; background-color: var(--c-surface); color: var(--c-text); border: 1px solid var(--c-border);">Mês atual</a>
+  {% endif %}
+</div>
+
+{% if grupos %}
+  {% for grupo in grupos %}
+  <div class="card mb-5">
+    <div class="section-header">
+      <h2 class="section-title">{{ grupo.rotulo }}</h2>
+      <span class="section-badge">{{ grupo.insights|length }}</span>
+    </div>
+    <div class="mt-3">
+      {% for insight in grupo.insights %}
+      <div class="insight-linha tom-{{ insight.tom }}">
+        <div>
+          <div class="text-sm font-medium">
+            {% if insight.link %}<a href="{{ insight.link }}" class="hover:underline">{{ insight.titulo }}</a>{% else %}{{ insight.titulo }}{% endif %}
+          </div>
+          <div class="text-xs text-muted">{{ insight.descricao }}</div>
+        </div>
+        <div class="flex items-center gap-3">
+          {% if insight.serie %}
+          <div style="width: 80px; height: 32px;">
+            <canvas id="sparkline-{{ grupo.area }}-{{ loop.index0 }}"></canvas>
+          </div>
+          {% endif %}
+          {% if insight.valor %}<div class="text-sm font-bold">{{ insight.valor }}</div>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+<div class="card">
+  <p class="text-muted text-sm py-4">Sem insights para este período.</p>
+</div>
+{% endif %}
+
+<div class="card mb-5">
+  <div class="section-header">
+    <h2 class="section-title">Explorar por Fornecedor</h2>
+  </div>
+  <p class="text-muted text-xs">
+    Uma consulta, não um alerta -- escolhe um fornecedor para veres a evolução do que já lhe
+    pagaste.
+  </p>
+  <form method="get" action="/insights" class="mt-3">
+    <input type="hidden" name="periodo" value="{{ periodo }}">
+    <label class="text-sm">
+      <span class="block text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Fornecedor</span>
+      <select name="fornecedor_id" class="select-clean" style="width: 100%; max-width: 320px;" onchange="this.form.submit()">
+        <option value="">-- Escolher --</option>
+        {% for f in fornecedores %}
+        <option value="{{ f.id }}" {% if fornecedor_selecionado_id == f.id|string %}selected{% endif %}>{{ f.nome }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </form>
+
+  {% if historico_fornecedor %}
+  <table class="table-clean mt-4">
+    <thead><tr><th>Data</th><th class="text-right">Valor</th></tr></thead>
+    <tbody>
+      {% for data, valor in historico_fornecedor %}
+      <tr class="table-row-interactive">
+        <td>{{ data.strftime('%d/%m/%Y') }}</td>
+        <td class="text-right tabular-nums font-medium">{{ valor | format_pt }} €</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% elif fornecedor_selecionado_id %}
+  <p class="text-muted text-sm py-4">Sem pagamentos registados para este fornecedor.</p>
+  {% endif %}
+</div>
+
+<script>
+  {% if grupos %}
+  const estiloInsights = getComputedStyle(document.documentElement);
+  const corAcentoInsights = estiloInsights.getPropertyValue('--c-accent').trim();
+  {% for grupo in grupos %}
+    {% for insight in grupo.insights %}
+      {% if insight.serie %}
+      new Chart(document.getElementById("sparkline-{{ grupo.area }}-{{ loop.index0 }}"), {
+        type: "line",
+        data: {
+          labels: [{% for v in insight.serie %}"{{ loop.index }}",{% endfor %}],
+          datasets: [{
+            data: [{% for v in insight.serie %}{{ v }},{% endfor %}],
+            borderColor: corAcentoInsights,
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.3,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: { x: { display: false }, y: { display: false } },
+        }
+      });
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+  {% endif %}
+</script>
+{% endblock %}

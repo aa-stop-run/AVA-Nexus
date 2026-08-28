@@ -1,0 +1,12 @@
+<form id="ativo-cell-{{ movimento_id }}"
+      hx-post="/movimentos/{{ movimento_id }}/ativo"
+      hx-target="#ativo-cell-{{ movimento_id }}" hx-swap="outerHTML"
+      class="inline-block mr-2">
+  <select name="ativo_id" class="select-clean" style="max-width: 130px"
+          onchange="this.form.requestSubmit()">
+    <option value="">Sem bem</option>
+    {% for a in ativos_disponiveis %}
+    <option value="{{ a.id }}" {% if ativo_id_atual == a.id %}selected{% endif %}>{{ a.nome }}</option>
+    {% endfor %}
+  </select>
+</form>

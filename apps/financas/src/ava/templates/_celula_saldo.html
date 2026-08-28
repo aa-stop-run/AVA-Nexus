@@ -1,0 +1,36 @@
+{# Célula de saldo DERIVADO de uma conta (Task 9, spec §12).
+
+Usada em patrimonio.html (3x: contas simples, investimentos, dívidas) e em
+conta_movimentos.html — antes copiada nos quatro sítios, extraída para aqui para a correção da
+condição da sub-linha da âncora (Ronda de correção 1) só precisar de mudar num lugar.
+
+`derivado` é o `SaldoDerivado | None` devolvido por `saldo_historico_repo.saldo_derivado`.
+Nenhuma âncora → `None` → traço "—", nunca "0,00 €" (uma conta de dívida sem âncora não afirma
+que não se deve nada — spec §3.2).
+
+A sub-linha "banco a dd/mm: X €" só aparece quando a âncora ACRESCENTA informação, ou seja,
+quando diverge do valor derivado (`derivado.valor != derivado.ancora_valor`). Repetir o mesmo
+número duas vezes na mesma célula não informa ninguém — e é o que acontecia com `e_estimado`:
+esse campo é verdadeiro sempre que há movimentos depois da âncora, mesmo quando eles se anulam
+exatamente (um depósito e um levantamento do mesmo valor no mesmo período), caso em que
+`derivado.valor` volta a ser igual a `derivado.ancora_valor` e a sub-linha voltaria a repetir o
+número. `e_estimado` continua correto para a pergunta "houve movimentos" — só não é a pergunta
+que a apresentação precisa de responder.
+
+`classe_valor` e `classe_sublinha` existem porque conta_movimentos.html mostra o saldo no
+cabeçalho da página (tipografia maior) e patrimonio.html mostra-o numa célula de tabela (o
+`<td>` já traz o negrito/cor, o valor não precisa de `<span>` próprio) — só a apresentação
+varia, a lógica de quando mostrar o quê é a mesma nos dois casos. #}
+{% macro celula_saldo(derivado, classe_valor="", classe_sublinha="text-[11px] text-muted font-normal block") %}
+{% if derivado %}
+{% if classe_valor %}<span class="{{ classe_valor }}">{{ derivado.valor | format_pt }} €</span>{% else %}{{ derivado.valor | format_pt }} €{% endif %}
+{% if derivado.valor != derivado.ancora_valor %}
+<span class="{{ classe_sublinha }}">
+  {{ "declarado" if derivado.ancora_origem == "manual" else "banco" }}
+  a {{ derivado.ancora_data.strftime("%d/%m") }}: {{ derivado.ancora_valor | format_pt }} €
+</span>
+{% endif %}
+{% else %}
+<span class="text-muted font-normal">—</span>
+{% endif %}
+{% endmacro %}

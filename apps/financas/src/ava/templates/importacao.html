@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-ink mb-1">Import Bank Statement (.xlsx / .csv / .ofx)</h1>
+  <p class="text-sm text-muted">Os movimentos entram diretamente no razão, já categorizados quando o comerciante é conhecido. Pode importar o mesmo ficheiro várias vezes sem duplicar — e ficam por confirmar até o extrato correspondente chegar.</p>
+</div>
+
+<div class="card p-6 w-full max-w-xl">
+  {% if erro %}
+  <div class="mb-5 text-sm font-medium text-negative p-3 bg-[rgba(239,68,68,0.1)] rounded-md">
+    {{ erro }}
+  </div>
+  {% endif %}
+  
+  {% if msg %}
+  <div class="mb-5 text-sm font-medium text-positive p-3 bg-[rgba(34,197,94,0.1)] rounded-md">
+    {{ msg }}
+  </div>
+  {% endif %}
+
+  <form method="post" action="/importar" enctype="multipart/form-data" class="flex flex-col gap-5">
+    <label class="block">
+      <span class="block text-sm font-bold text-muted uppercase tracking-wider mb-2">Conta de Destino/Origem</span>
+      <select name="conta_id" class="form-input w-full" required>
+        <option value="">-- Selecione a conta bancária --</option>
+        {% for c in contas %}
+            <option value="{{ c.id }}">{{ c.nome }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label class="block">
+      <span class="block text-sm font-bold text-muted uppercase tracking-wider mb-2">Bank Statement File (.xlsx / .csv / .ofx)</span>
+      <input type="file" name="file" accept=".xlsx" class="form-input w-full pt-3" required>
+      <p class="text-xs text-muted mt-1">
+        Export transaction list from your online banking to Excel/CSV and upload here.
+        
+      </p>
+    </label>
+
+    <div class="pt-2">
+      <button type="submit" class="btn-primary w-full py-3">Importar Movimentos</button>
+    </div>
+  </form>
+</div>
+
+<div class="mb-6 mt-10">
+  <h1 class="text-2xl font-bold text-ink mb-1">Enviar extrato bancário (PDF)</h1>
+  <p class="text-sm text-muted">O ficheiro é enviado para o arquivo de documentos e processado automaticamente nos próximos minutos — não precisas de esperar aqui.</p>
+</div>
+
+<div class="card p-6 w-full max-w-xl">
+  {% if erro_extrato %}
+  <div class="mb-5 text-sm font-medium text-negative p-3 bg-[rgba(239,68,68,0.1)] rounded-md">
+    {{ erro_extrato }}
+  </div>
+  {% endif %}
+
+  {% if msg_extrato %}
+  <div class="mb-5 text-sm font-medium text-positive p-3 bg-[rgba(34,197,94,0.1)] rounded-md">
+    {{ msg_extrato }}
+  </div>
+  {% endif %}
+
+  <form method="post" action="/importar/extrato" enctype="multipart/form-data" class="flex flex-col gap-5">
+    <label class="block">
+      <span class="block text-sm font-bold text-muted uppercase tracking-wider mb-2">Titular</span>
+      <select name="titular_id" class="form-input w-full" required>
+        <option value="">-- Selecione o titular --</option>
+        {% for t in titulares %}
+            <option value="{{ t.id }}">{{ t.nome }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label class="block">
+      <span class="block text-sm font-bold text-muted uppercase tracking-wider mb-2">Extrato (.pdf)</span>
+      <input type="file" name="file" accept=".pdf" class="form-input w-full pt-3" required>
+    </label>
+
+    <div class="pt-2">
+      <button type="submit" class="btn-primary w-full py-3">Enviar Extrato</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

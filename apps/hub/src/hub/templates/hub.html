@@ -1,0 +1,1196 @@
+﻿{% extends "base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-12 gap-2.5 h-full overflow-hidden">
+    
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- LEFT WING: Compact Nodes Telemetry HUD + Direct Family Agenda     -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="hidden lg:flex lg:col-span-3 flex-col gap-2.5 h-full overflow-hidden">
+        
+        <!-- Card 1: System & Nodes Telemetry (Compact High-Density HUD) -->
+        <div onclick="if(window.HUDDrawer) window.HUDDrawer.open('workstation');" class="hud-panel hud-bracket hud-glow-cyan p-3 flex flex-col justify-between cursor-pointer group shrink-0">
+            <div class="flex items-center justify-between border-b border-cyan-500/20 pb-1 mb-1.5">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-sm bg-cyan-400"></span>
+                    <h3 class="font-bold text-[11px] text-white uppercase font-mono tracking-wider">Nodes Telemetry</h3>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-[8px] font-mono text-emerald-400 font-bold tracking-wider">ONLINE // SINC</span>
+                </div>
+            </div>
+
+            <!-- Compact Dual Node Grid (Side-by-Side) -->
+            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                <!-- Node 01: Workstation PC -->
+                <div class="p-2 rounded-xl bg-slate-900/90 border border-cyan-500/30 space-y-1 group-hover:border-cyan-400/50 transition-colors">
+                    <div class="flex justify-between items-center text-[9px] border-b border-white/10 pb-1">
+                        <span class="text-cyan-300 font-bold">NODE 01: PC</span>
+                        <span class="text-[8px] text-slate-400">Win 11</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-slate-400">CPU (16C):</span>
+                        <span id="pc-telemetry-cpu" class="font-bold text-cyan-300">--%</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-slate-400">RTX 3070:</span>
+                        <span id="pc-telemetry-gpu-temp" class="font-bold text-violet-300">--°C</span>
+                    </div>
+                    <div class="w-full h-1 rounded-full bg-slate-950 overflow-hidden border border-white/10 mt-0.5">
+                        <div id="ram-progress-bar" class="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <!-- Node 02: AVA Homelab Server -->
+                <div class="p-2 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1 group-hover:border-emerald-400/50 transition-colors">
+                    <div class="flex justify-between items-center text-[9px] border-b border-white/10 pb-1">
+                        <span class="text-emerald-400 font-bold">NODE 02: AVA HOST</span>
+                        <span class="text-[8px] text-slate-400">Ubuntu</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-slate-400">CPU Load:</span>
+                        <span id="server-telemetry-cpu" class="font-bold text-cyan-300">{{ telemetria.cpu_percent }}%</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-slate-400">RAM:</span>
+                        <span id="server-telemetry-ram" class="font-bold text-emerald-300 text-[9px]">{{ telemetria.ram_usada_gb }}/{{ telemetria.ram_total_gb }}G</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[8px] text-slate-400 pt-0.5 border-t border-emerald-500/10">
+                        <span class="text-emerald-400">● 24 Docker</span>
+                        <span class="text-slate-400 font-mono">{{ telemetria.uptime }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Live Family Agenda & Interactive Mini-Calendar (Direct on Cockpit Screen) -->
+        <div class="hud-panel hud-bracket hud-glow-cyan p-3 flex flex-col justify-between flex-1 overflow-hidden space-y-2">
+            <!-- Agenda Header -->
+            <div class="flex items-center justify-between border-b border-violet-500/30 pb-1 shrink-0">
+                <div class="flex items-center space-x-2">
+                    <span class="text-violet-400 font-mono text-xs font-bold">[📅]</span>
+                    <h3 class="font-bold text-[11px] text-white uppercase font-mono tracking-wider">Agenda Familiar</h3>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                    <a href="/api/agenda/feed.ics" title="Link de subscrição iCal para Google Calendar ou iPhone" download="ava_agenda.ics" class="px-1.5 py-0.5 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 hover:bg-sky-500/20 text-[9px] font-mono flex items-center space-x-1">
+                        <span>📡</span>
+                        <span>iCal</span>
+                    </a>
+                    <button type="button" onclick="window.AgendaModal.openCreate()" title="Criar Novo Compromisso" class="px-2 py-0.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-white font-bold text-[9px] shadow-sm shadow-violet-500/30 font-mono">
+                        + Evento
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interactive Month Mini-Calendar Grid -->
+            <div class="p-2 bg-slate-950/70 rounded-xl border border-white/10 shrink-0">
+                <!-- Month Navigation Header -->
+                <div class="flex items-center justify-between mb-1 px-0.5">
+                    <button type="button" onclick="window.CockpitCalendar.changeMonth(-1)" title="Mês Anterior" class="w-5 h-5 rounded bg-slate-900 border border-violet-500/30 hover:border-violet-400 text-slate-300 hover:text-white flex items-center justify-center text-xs font-mono transition-colors">
+                        ‹
+                    </button>
+                    <div class="flex items-center space-x-1.5">
+                        <span id="cockpit-cal-month-title" class="text-[11px] font-bold text-white font-mono uppercase tracking-wider">Agosto 2026</span>
+                        <button type="button" onclick="window.CockpitCalendar.goToday()" title="Ir para o mês atual" class="text-[8px] px-1.5 py-0.2 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30 font-mono hover:bg-violet-500/40">
+                            Hoje
+                        </button>
+                    </div>
+                    <button type="button" onclick="window.CockpitCalendar.changeMonth(1)" title="Próximo Mês" class="w-5 h-5 rounded bg-slate-900 border border-violet-500/30 hover:border-violet-400 text-slate-300 hover:text-white flex items-center justify-center text-xs font-mono transition-colors">
+                        ›
+                    </button>
+                </div>
+
+                <!-- Weekdays Mon-Sun -->
+                <div class="grid grid-cols-7 gap-1 text-center text-[8px] font-mono text-slate-400 font-bold uppercase mb-1">
+                    <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span class="text-rose-400/80">Sáb</span><span class="text-rose-400/80">Dom</span>
+                </div>
+
+                <!-- Days 7-Col Grid -->
+                <div id="cockpit-cal-grid" class="grid grid-cols-7 gap-1 text-center font-mono">
+                    <!-- Gerado dinamicamente por CockpitCalendar -->
+                </div>
+            </div>
+
+            <!-- Feed Subtitle & Filter Status -->
+            <div class="flex items-center justify-between text-[10px] font-mono px-1 py-1 bg-slate-900/60 rounded-lg border border-white/5 shrink-0">
+                <div class="flex items-center space-x-1.5">
+                    <span id="cockpit-feed-title" class="text-slate-300 font-medium">Próximos Compromissos</span>
+                    <button id="cockpit-feed-clear-filter" onclick="window.CockpitCalendar.clearFilter()" class="hidden text-[9px] text-cyan-400 hover:text-cyan-300 underline font-mono">
+                        (Ver Todos)
+                    </button>
+                </div>
+                <span id="cockpit-feed-count" class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 font-bold border border-violet-500/30 text-[9px]">
+                    {{ dados.agenda_total_hoje }} Hoje
+                </span>
+            </div>
+
+            <!-- Chronological Events Feed -->
+            <div id="cockpit-agenda-feed" class="flex-1 overflow-y-auto custom-scrollbar space-y-1.5 pr-0.5 my-0.5 min-h-[140px]">
+                {% if dados.agenda_eventos %}
+                    {% for ev in dados.agenda_eventos %}
+                    <div {% if ev.editavel %}onclick="window.AgendaModal.openEdit({ id: '{{ ev.id }}', titulo: '{{ ev.titulo | escape }}', data: '{{ ev.data }}', hora: '{{ ev.hora }}', local: '{{ ev.local or '' }}', subtitulo: '{{ ev.subtitulo or '' }}', tipo: '{{ ev.tipo }}', cor: '{{ ev.cor }}', origem: '{{ ev.origem }}' })" title="Clica para ver ou gerir este compromisso"{% endif %} class="group p-2 rounded-xl bg-slate-900/90 border {% if ev.cor == 'rose' %}border-rose-500/30 hover:border-rose-400/60{% elif ev.cor == 'emerald' %}border-emerald-500/30 hover:border-emerald-400/60{% elif ev.cor == 'cyan' %}border-cyan-500/30 hover:border-cyan-400/60{% else %}border-violet-500/30 hover:border-violet-400/60{% endif %} flex items-center justify-between text-xs font-mono transition-all {% if ev.editavel %}cursor-pointer hover:bg-slate-800/80 hover:scale-[1.01]{% endif %}">
+                        <div class="flex items-center space-x-2 min-w-0">
+                            <!-- Category Glow Dot & Time Badge -->
+                            <div class="flex flex-col items-center shrink-0">
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold border {% if ev.cor == 'rose' %}bg-rose-500/20 text-rose-300 border-rose-500/40{% elif ev.cor == 'emerald' %}bg-emerald-500/20 text-emerald-300 border-emerald-500/40{% elif ev.cor == 'cyan' %}bg-cyan-500/20 text-cyan-300 border-cyan-500/40{% else %}bg-violet-500/20 text-violet-300 border-violet-500/40{% endif %}">
+                                    {{ ev.hora }}
+                                </span>
+                                <span class="text-[8px] text-slate-500 font-mono mt-0.5">{{ ev.data[8:10] }}/{{ ev.data[5:7] }}</span>
+                            </div>
+
+                            <!-- Title & Subtitle -->
+                            <div class="truncate min-w-0">
+                                <strong class="text-white text-[11px] block truncate font-medium group-hover:text-cyan-300 transition-colors">{{ ev.titulo }}</strong>
+                                <span class="text-[9px] text-slate-400 block truncate">{{ ev.subtitulo or ev.local or 'Ecossistema AVA' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Category Indicator Icon / Delete Button -->
+                        <div class="flex items-center space-x-1.5 shrink-0 pl-1">
+                            <span class="text-xs {% if ev.cor == 'rose' %}text-rose-400{% elif ev.cor == 'emerald' %}text-emerald-400{% elif ev.cor == 'cyan' %}text-cyan-400{% else %}text-violet-400{% endif %}">
+                                {% if ev.cor == 'rose' %}🩺{% elif ev.cor == 'emerald' %}🚗{% elif ev.cor == 'cyan' %}💳{% else %}📅{% endif %}
+                            </span>
+                            {% if ev.editavel %}
+                            <button type="button" onclick="event.stopPropagation(); window.AgendaModal.deleteDirect('{{ ev.id }}');" title="{% if ev.origem == 'google' %}Eliminar da AVA (mantém no Google Calendar){% else %}Desmarcar / Remove{% endif %}" class="text-slate-500 hover:text-rose-400 hover:bg-rose-500/20 rounded px-1.5 py-0.5 text-xs font-mono transition-all">
+                                ✕
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="py-6 text-center text-slate-500 font-mono text-[11px]">
+                        Nenhum compromisso marcado para breve.
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Footer Quick Expand Button -->
+            <button type="button" onclick="if(window.HUDDrawer) window.HUDDrawer.open('calendar');" class="w-full py-1 rounded-xl bg-slate-900/90 border border-violet-500/30 hover:border-violet-400 hover:bg-violet-950/40 text-violet-300 font-bold text-[10px] font-mono flex items-center justify-center gap-1.5 transition-all shrink-0">
+                <span>Ver Calendário Completo ↗</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- CENTER STAGE: Prominent 3D Particle Hologram & Voice Spectrum     -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="col-span-12 lg:col-span-6 flex flex-col justify-between items-center h-full w-full p-1 relative overflow-hidden">
+        
+        <!-- Top Executive Daily Briefing Banner -->
+        <div class="w-full hud-panel hud-bracket hud-glow-cyan px-2.5 sm:px-3.5 py-1.5 flex items-center justify-between gap-2 shrink-0 z-20">
+            <div class="flex items-center space-x-2 min-w-0">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping shrink-0"></span>
+                <p class="text-[11px] sm:text-xs text-slate-200 truncate font-medium" title="{{ briefing.pontos | join(' ') if briefing.pontos else '' }}">
+                    <strong class="text-white font-bold font-mono">{{ briefing.saudacao }}</strong> {{ briefing.pontos | join(' ') if briefing.pontos else 'Meteorologia e agenda sincronizadas em tempo real.' }}
+                </p>
+            </div>
+            <button id="btn-speak-briefing" type="button" title="Ouvir Resumo Diário por Voz" class="px-2.5 sm:px-3 py-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-300 text-[11px] sm:text-xs font-bold shrink-0 transition-colors flex items-center gap-1.5 cursor-pointer">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                <span id="briefing-btn-label" class="inline font-mono">Briefing</span>
+            </button>
+            <span id="briefing-speech-text" class="hidden">{{ briefing.texto_fala }}</span>
+        </div>
+
+        <!-- ⚡ RADAR DE AÇÕES PROATIVAS (Inteligência Antecipatória) - Visível no Desktop (lg), oculto no telemóvel -->
+        {% if dados.radar_proativo %}
+        <div class="hidden lg:block w-full hud-panel hud-bracket p-2 bg-slate-950/90 border border-cyan-500/30 shrink-0 z-20">
+            <div class="flex items-center justify-between border-b border-cyan-500/20 pb-1 mb-1.5 px-1">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                    <h3 class="font-bold text-[10px] text-cyan-300 uppercase font-mono tracking-wider flex items-center gap-1.5">
+                        <span>⚡ RADAR DE AÇÕES PROATIVAS</span>
+                        <span class="text-[8px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-mono">IA ANTECIPAÇÃO</span>
+                    </h3>
+                </div>
+                <span class="text-[9px] font-mono text-slate-400">{{ dados.radar_proativo|length }} AVISOS CRÍTICOS</span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                {% for item in dados.radar_proativo %}
+                <div class="p-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-cyan-500/40 transition-all flex items-center justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <span class="text-[8px] font-bold font-mono px-1.5 py-0.5 rounded border {{ item.badge_classe }}">{{ item.badge }}</span>
+                            <h4 class="text-[11px] font-bold text-white truncate font-sans">{{ item.titulo }}</h4>
+                        </div>
+                        <p class="text-[9.5px] text-slate-300 truncate font-mono">{{ item.descricao }}</p>
+                    </div>
+                    <a href="{{ item.link }}" target="_blank" class="shrink-0 px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/40 border border-cyan-400/40 text-cyan-300 text-[10px] font-mono font-bold transition-colors no-underline">
+                        {{ item.link_texto }} →
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Center Stage 3D Holographic Canvas (Scaled & Prominent) -->
+        <div class="relative w-full flex-1 flex flex-col items-center justify-center overflow-hidden my-0.5">
+            <!-- HUD Reticle Header Label -->
+            <div class="flex items-center space-x-3 mb-1 shrink-0">
+                <div class="w-12 h-[1px] bg-gradient-to-r from-transparent to-cyan-400"></div>
+                <span id="ava-voice-status" class="text-[10px] font-mono uppercase tracking-widest text-cyan-300 font-bold hud-text-glow">
+                    VOICE / AI STATUS
+                </span>
+                <div class="w-12 h-[1px] bg-gradient-to-l from-transparent to-cyan-400"></div>
+            </div>
+
+            <!-- Interactive 3D Canvas Area -->
+            <div class="relative w-full flex-1 max-h-[360px] flex items-center justify-center cursor-pointer group" title="Clica no núcleo para falar com a AVA">
+                <canvas id="nexus-orb-canvas" class="w-full h-full"></canvas>
+            </div>
+
+            <!-- Realtime Audio Frequency Spectrum Visualizer (Lively Cyan Bars) -->
+            <div class="w-full max-w-md h-9 px-4 flex items-center justify-center shrink-0">
+                <canvas id="soundwave-canvas" class="w-full h-full opacity-90"></canvas>
+            </div>
+
+            <!-- Dynamic Floating HUD Speech Response Box -->
+            <div id="ava-ai-response-box" class="hidden w-full max-w-lg hud-panel hud-bracket p-3 border-cyan-400/50 bg-slate-950/95 text-cyan-100 text-xs shadow-2xl z-30 transition-all my-1">
+                <div class="flex items-center justify-between border-b border-cyan-500/20 pb-1 mb-2">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span class="font-mono text-[9px] uppercase tracking-wider text-cyan-300 font-bold">AVA HUD Response</span>
+                    </div>
+                    <span id="ava-user-query-echo" class="text-[10px] text-slate-400 font-mono truncate max-w-[200px]"></span>
+                    <button type="button" onclick="if(window.speech) window.speech.stop(); document.getElementById('ava-ai-response-box').classList.add('hidden');" class="text-slate-400 hover:text-cyan-300 text-xs font-mono px-1">
+                        [X]
+                    </button>
+                </div>
+                <div id="ava-ai-response-text" class="leading-relaxed text-white font-medium text-xs font-mono"></div>
+            </div>
+        </div>
+
+        <!-- Action HUD & Spotlight Command Bar -->
+        <div class="w-full space-y-1.5 shrink-0 z-20">
+            <!-- Quick Action Shortcut Chips (Glass pills with touch scroll on mobile) -->
+            <div class="flex items-center justify-start sm:justify-center space-x-2 font-mono text-[9.5px] overflow-x-auto no-scrollbar max-w-full px-1 py-0.5">
+                <button type="button" onclick="if(window.HUDDrawer) window.HUDDrawer.open('wealth');" class="px-3 py-1 rounded-full bg-slate-900/90 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950/50 text-slate-200 hover:text-cyan-300 transition-all flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> <span>+ Despesa</span>
+                </button>
+                <button type="button" onclick="if(window.HUDDrawer) window.HUDDrawer.open('health');" class="px-3 py-1 rounded-full bg-slate-900/90 border border-rose-500/30 hover:border-rose-400 hover:bg-rose-950/50 text-slate-200 hover:text-rose-300 transition-all flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> <span>+ Consulta</span>
+                </button>
+                <button type="button" onclick="if(window.HUDDrawer) window.HUDDrawer.open('fleet');" class="px-3 py-1 rounded-full bg-slate-900/90 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950/50 text-slate-200 hover:text-emerald-300 transition-all flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> <span>+ Abastecimento</span>
+                </button>
+                <button type="button" onclick="if(window.HUDDrawer) window.HUDDrawer.open('calendar');" class="px-3 py-1 rounded-full bg-slate-900/90 border border-violet-500/30 hover:border-violet-400 hover:bg-violet-950/50 text-slate-200 hover:text-violet-300 transition-all flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse"></span> <span>📅 Agenda</span>
+                </button>
+                <a href="http://localhost:8081/simulador" target="_blank" class="px-3 py-1 rounded-full bg-slate-900/90 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-950/50 text-slate-200 hover:text-emerald-300 transition-all flex items-center gap-1.5 no-underline">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> <span>🧮 Simulador</span>
+                </a>
+                <a href="http://localhost:8081/tesouraria" target="_blank" class="px-3 py-1 rounded-full bg-slate-900/90 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950/50 text-slate-200 hover:text-cyan-300 transition-all flex items-center gap-1.5 no-underline">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> <span>🔮 Tesouraria</span>
+                </a>
+                <a href="http://localhost:8081/otimizador" target="_blank" class="px-3 py-1 rounded-full bg-slate-900/90 border border-amber-500/30 hover:border-amber-400 hover:bg-amber-950/50 text-slate-200 hover:text-amber-300 transition-all flex items-center gap-1.5 no-underline">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> <span>⚡ Otimizador</span>
+                </a>
+                <a href="http://localhost:8084" target="_blank" class="px-3 py-1 rounded-full bg-slate-900/90 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-950/50 text-slate-200 hover:text-cyan-300 transition-all flex items-center gap-1.5 no-underline">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> <span>🏠 Casa</span>
+                </a>
+                <a href="http://localhost:8085" target="_blank" class="px-3 py-1 rounded-full bg-slate-900/90 border border-purple-500/30 hover:border-purple-400 hover:bg-purple-950/50 text-slate-200 hover:text-purple-300 transition-all flex items-center gap-1.5 no-underline">
+                    <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span> <span>🪪 Cidadania</span>
+                </a>
+                <button type="button" onclick="window.location.reload();" class="px-3 py-1 rounded-full bg-slate-900/90 border border-slate-700/50 hover:border-slate-500 hover:bg-slate-800/50 text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> <span>↻ Sync</span>
+                </button>
+            </div>
+
+            <!-- Spotlight Prompt Input Bar -->
+            <div class="hud-panel hud-bracket p-1.5 flex items-center space-x-2">
+                <button id="btn-mic" type="button" title="Falar com a AVA" class="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 flex items-center justify-center hover:bg-cyan-500/30 hover:scale-105 transition-all text-sm shadow-md shadow-cyan-500/25 shrink-0">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                </button>
+                <div class="flex-1 relative">
+                    <input id="ava-command-input" type="text" placeholder="Pergunta ou comanda a AVA por voz ou texto... [Ctrl+K]" class="w-full bg-slate-950/80 border border-cyan-500/20 rounded-xl px-3.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono">
+                </div>
+                <button id="btn-execute-command" type="button" class="inline-flex items-center justify-center px-4 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-400 text-slate-950 font-black text-[11px] uppercase font-mono tracking-wider hover:opacity-90 transition-opacity shrink-0 shadow-md shadow-cyan-500/20">
+                    Executar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- RIGHT WING: Dynamic Liquid Wealth, Pure Health & Dedicated Fleet   -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="hidden lg:flex lg:col-span-3 flex-col gap-2.5 h-full overflow-hidden">
+        
+        <!-- Card 1: Liquid Wealth Wave (Real Dynamic 6-Month Evolution Wave) -->
+        <div onclick="if(window.HUDDrawer) window.HUDDrawer.open('wealth');" class="hud-panel hud-bracket hud-glow-cyan p-2.5 flex flex-col justify-between cursor-pointer group flex-1">
+            <div class="flex items-center justify-between border-b border-cyan-500/20 pb-1 mb-1">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-sm bg-cyan-400"></span>
+                    <h3 class="font-bold text-[11px] text-white uppercase font-mono tracking-wider">Liquid Wealth Wave</h3>
+                </div>
+                <span class="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold group-hover:bg-cyan-500/30 transition-colors">
+                    Detalhes ↗
+                </span>
+            </div>
+
+            <!-- Big Metric Value -->
+            <div class="my-0.5">
+                <span class="text-xl font-black text-white tracking-tight block hud-text-glow font-mono">{{ dados.patrimonio_total | moeda }}</span>
+                <span class="text-[8px] text-cyan-300 font-mono uppercase tracking-wider">Património Líquido Consolidado</span>
+            </div>
+
+            <!-- Dynamic Wave Chart with Real Historical Points -->
+            <div class="p-1.5 rounded-xl bg-slate-900/90 border border-cyan-500/30 my-0.5 hud-chart-grid relative liquid-wealth-wave group-hover:border-cyan-400/50 transition-colors">
+                <div class="h-16 w-full relative flex flex-col justify-end">
+                    <svg class="w-full h-full" viewBox="0 0 240 70" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="wealthGradStark" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.55"/>
+                                <stop offset="60%" stop-color="#06b6d4" stop-opacity="0.12"/>
+                                <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0"/>
+                            </linearGradient>
+                            <filter id="glowWave">
+                                <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <!-- Dynamic Area Fill -->
+                        <path d="{{ dados.wave_area_d }}" fill="url(#wealthGradStark)"/>
+                        <!-- Dynamic Line Stroke -->
+                        <path d="{{ dados.wave_path_d }}" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" filter="url(#glowWave)"/>
+                        <!-- Interactive Data Anchors -->
+                        {% for p in dados.pontos_svg %}
+                        <g class="cursor-pointer group/dot">
+                            <circle cx="{{ p.x }}" cy="{{ p.y }}" r="3" fill="#22d3ee" class="transition-transform group-hover/dot:scale-150"/>
+                            <circle cx="{{ p.x }}" cy="{{ p.y }}" r="1.5" fill="#ffffff"/>
+                            <title>{{ p.mes }}: {{ p.valor | moeda }}</title>
+                        </g>
+                        {% endfor %}
+                    </svg>
+                    <!-- Months Axis -->
+                    <div class="flex justify-between text-[8px] font-mono text-slate-400 px-1 pt-0.5 border-t border-cyan-500/15">
+                        {% for p in dados.pontos_svg %}
+                        <span class="hover:text-cyan-300 font-bold cursor-pointer" title="{{ p.valor | moeda }}">{{ p.mes }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ativos vs Dívidas Stats (Grid 2-col) -->
+            <div class="grid grid-cols-2 gap-1.5 text-[9px] font-mono mt-0.5">
+                <div class="p-1 px-1.5 rounded-lg bg-slate-900/80 border border-white/10 flex justify-between items-center">
+                    <span class="text-slate-400">Ativos:</span>
+                    <span class="font-bold text-emerald-400">{{ dados.total_ativos | moeda }}</span>
+                </div>
+                <div class="p-1 px-1.5 rounded-lg bg-slate-900/80 border border-white/10 flex justify-between items-center">
+                    <span class="text-slate-400">Dívidas:</span>
+                    <span class="font-bold text-rose-400">{{ dados.total_dividas | moeda }}</span>
+                </div>
+            </div>
+
+            <!-- Visão do Mês Corrente (Entradas, Saídas e Balanço) -->
+            <div class="mt-2 pt-2 border-t border-cyan-500/20 font-mono">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[9px] uppercase tracking-wider text-cyan-300 font-bold flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span>Mês Corrente // {{ dados.mes_corrente_nome }}</span>
+                    </span>
+                    <span class="text-[8px] text-slate-400">{{ dados.total_movimentos_mes }} movimentos</span>
+                </div>
+
+                <!-- Grid de 3 Métricas do Mês Corrente -->
+                <div class="grid grid-cols-3 gap-1 text-center">
+                    <!-- Entradas / Receitas -->
+                    <div class="p-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 flex flex-col justify-between">
+                        <span class="text-[7.5px] uppercase text-emerald-400 font-bold leading-tight flex items-center justify-center gap-0.5">
+                            <span>▲</span> Receitas
+                        </span>
+                        <span class="text-[10px] font-black text-emerald-300 font-mono mt-0.5 leading-tight">+{{ dados.receitas_mes | moeda }}</span>
+                    </div>
+
+                    <!-- Saídas / Despesas -->
+                    <div class="p-1 rounded-lg bg-rose-950/40 border border-rose-500/30 flex flex-col justify-between">
+                        <span class="text-[7.5px] uppercase text-rose-400 font-bold leading-tight flex items-center justify-center gap-0.5">
+                            <span>▼</span> Despesas
+                        </span>
+                        <span class="text-[10px] font-black text-rose-300 font-mono mt-0.5 leading-tight">-{{ dados.despesas_mes | moeda }}</span>
+                    </div>
+
+                    <!-- Balanço Líquido do Mês -->
+                    <div class="p-1 rounded-lg bg-slate-900/90 border {% if dados.saldo_mes >= 0 %}border-cyan-500/30 text-cyan-300{% else %}border-amber-500/30 text-amber-300{% endif %} flex flex-col justify-between">
+                        <span class="text-[7.5px] uppercase {% if dados.saldo_mes >= 0 %}text-cyan-400{% else %}text-amber-400{% endif %} font-bold leading-tight">
+                            Balanço
+                        </span>
+                        <span class="text-[10px] font-black font-mono mt-0.5 leading-tight">{% if dados.saldo_mes >= 0 %}+{% endif %}{{ dados.saldo_mes | moeda }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Family Health Status (Compact High-Density HUD) -->
+        <div onclick="if(window.HUDDrawer) window.HUDDrawer.open('health');" class="hud-panel hud-bracket hud-glow-purple p-2 flex flex-col justify-between shrink-0 cursor-pointer group">
+            <div class="flex items-center justify-between border-b border-rose-500/20 pb-1 mb-1">
+                <div class="flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-sm bg-rose-400"></span>
+                    <h3 class="font-bold text-[10px] text-white uppercase font-mono tracking-wider">Family Health Status</h3>
+                </div>
+                <span class="text-[8px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold group-hover:bg-rose-500/30 transition-colors">
+                    Clínica (:8083) ↗
+                </span>
+            </div>
+
+            <!-- Member Chips with ECG Waveforms (Compact) -->
+            <div class="space-y-1 mb-1">
+                {% for m in dados.membros_saude %}
+                <div class="p-1 px-2 rounded-lg bg-slate-900/90 border border-rose-500/20 flex items-center justify-between">
+                    <div class="flex items-center space-x-1.5">
+                        <div class="w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-rose-500 to-amber-400 p-[1px] shrink-0">
+                            <div class="w-full h-full bg-slate-950 rounded-full flex items-center justify-center text-[7px] font-black text-rose-300 font-mono">
+                                {{ m.nome[:2].upper() }}
+                            </div>
+                        </div>
+                        <span class="text-[9.5px] font-bold text-white leading-none font-mono">{{ m.nome }}</span>
+                    </div>
+                    <div class="flex items-center space-x-1.5">
+                        <svg class="w-9 h-2 text-emerald-400" viewBox="0 0 60 16" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M0,8 L14,8 L17,2 L22,14 L26,5 L29,10 L32,8 L60,8"/>
+                        </svg>
+                        <span class="text-[7px] font-mono px-1 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">
+                            NOMINAL
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Biomarker Reading Pill -->
+            <div class="p-1 px-2 rounded-lg bg-rose-950/40 border border-rose-500/30 text-[8.5px] font-mono flex items-center justify-between">
+                <span class="text-[7.5px] uppercase text-rose-300 font-bold tracking-wider shrink-0">Última Leitura:</span>
+                {% if dados.biomarcadores_recentes %}
+                <span class="font-bold text-white text-[8.5px] truncate ml-1.5">{{ dados.biomarcadores_recentes[0].parametro }}: <span class="text-emerald-400">{{ dados.biomarcadores_recentes[0].valor }} {{ dados.biomarcadores_recentes[0].unidade }}</span> ({{ dados.biomarcadores_recentes[0].paciente }})</span>
+                {% else %}
+                <span class="text-slate-400 ml-1">Sem exames pendentes</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Card 3: Casa, Warranties & Manutenção HUD (Novo Módulo :8084) -->
+        <div onclick="if(window.HUDDrawer) window.HUDDrawer.open('casa');" class="hud-panel hud-bracket hud-glow-amber p-2 flex flex-col justify-between cursor-pointer group shrink-0">
+            <div class="flex items-center justify-between border-b border-amber-500/20 pb-1 mb-1">
+                <div class="flex items-center space-x-1.5">
+                    <span class="text-amber-400 text-xs">🏠</span>
+                    <h3 class="font-bold text-[10px] text-white uppercase font-mono tracking-wider">Home & Warranties</h3>
+                </div>
+                <span class="text-[8px] font-mono text-amber-400 font-bold group-hover:text-amber-300 transition-colors">
+                    Casa (:8084) ↗
+                </span>
+            </div>
+
+            <!-- Conteúdo Casa: Garantia em destaque + Próxima Manutenção -->
+            <div class="space-y-1 text-[9px] font-mono">
+                {% if dados.equipamentos_casa %}
+                {% for eq in dados.equipamentos_casa[:1] %}
+                <div class="p-1 px-2 rounded-lg bg-slate-900/80 border border-amber-500/20 flex justify-between items-center">
+                    <div class="truncate max-w-[170px]">
+                        <strong class="text-white text-[9px] truncate block">{{ eq.nome }}</strong>
+                        <span class="text-[7.5px] text-slate-400">Até {{ eq.data_fim }} • {{ eq.marca or 'Equipamento' }}</span>
+                    </div>
+                    <span class="text-[8px] px-1.5 py-0.2 rounded {% if eq.dias_restantes <= 60 %}bg-amber-500/20 text-amber-300 border border-amber-500/30{% else %}bg-cyan-500/20 text-cyan-300 border border-cyan-500/30{% endif %} font-bold shrink-0">
+                        {{ eq.dias_restantes }}d REST
+                    </span>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                {% if dados.proximas_manutencoes_casa %}
+                {% for m in dados.proximas_manutencoes_casa[:1] %}
+                <div class="p-1 px-2 rounded-lg bg-slate-900/80 border border-amber-500/20 flex justify-between items-center">
+                    <div class="truncate max-w-[170px]">
+                        <strong class="text-white text-[9px] truncate block">{{ m.titulo }}</strong>
+                        <span class="text-[7.5px] text-slate-400">{{ m.divisao or 'Casa' }} • {{ m.data }}</span>
+                    </div>
+                    <span class="text-[8px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 shrink-0">
+                        EM {{ m.dias_restantes }} DIAS
+                    </span>
+                </div>
+                {% endfor %}
+                {% elif dados.equipamentos_casa|length > 1 %}
+                {% for eq in dados.equipamentos_casa[1:2] %}
+                <div class="p-1 px-2 rounded-lg bg-slate-900/80 border border-amber-500/20 flex justify-between items-center">
+                    <div class="truncate max-w-[170px]">
+                        <strong class="text-white text-[9px] truncate block">{{ eq.nome }}</strong>
+                        <span class="text-[7.5px] text-slate-400">Até {{ eq.data_fim }}</span>
+                    </div>
+                    <span class="text-[8px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shrink-0">
+                        {{ eq.dias_restantes }}d REST
+                    </span>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Card 4: Dedicated Fleet & Garage HUD -->
+        <div onclick="if(window.HUDDrawer) window.HUDDrawer.open('fleet');" class="hud-panel hud-bracket hud-glow-emerald p-2 flex flex-col justify-between cursor-pointer group shrink-0">
+            <div class="flex items-center justify-between border-b border-emerald-500/20 pb-1 mb-1">
+                <div class="flex items-center space-x-1.5">
+                    <span class="text-emerald-400 text-xs">🚗</span>
+                    <h3 class="font-bold text-[10px] text-white uppercase font-mono tracking-wider">Frota & Garagem</h3>
+                </div>
+                <span class="text-[8px] font-mono text-emerald-400 font-bold group-hover:text-emerald-300 transition-colors">
+                    Garagem (:8082) ↗
+                </span>
+            </div>
+
+            <!-- Vehicles Mini Stream (Real DB data) -->
+            <div class="space-y-1 text-[9px] font-mono">
+                {% for v in dados.veiculos %}
+                <div class="p-1 px-2 rounded-lg bg-slate-900/80 border border-white/10 flex justify-between items-center">
+                    <div>
+                        <strong class="text-white text-[9.5px]">{{ v.nome }}</strong>
+                        <span class="text-[8px] text-slate-400 ml-1">{{ "{:,.0f}".format(v.km_atual).replace(",", ".") }} km</span>
+                    </div>
+                    <span class="text-[7.5px] px-1.5 py-0.2 rounded {% if v.dias_para_ipo and v.dias_para_ipo <= 30 %}bg-amber-500/20 text-amber-300 border border-amber-500/30{% else %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30{% endif %} font-bold">
+                        {% if v.proxima_ipo %}IPO: {{ v.proxima_ipo }}{% else %}ISENTO{% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- BOTTOM DOCK: Homelab Matrix Launcher (Visível no Desktop, oculto em Mobile) -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div class="hidden lg:flex hud-panel px-3.5 py-1.5 mt-1.5 items-center justify-between gap-2 text-xs shrink-0 z-20">
+    <div class="flex items-center space-x-2 font-mono text-[10px] text-slate-300 shrink-0">
+        <svg class="w-3.5 h-3.5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <span class="font-bold text-cyan-300 tracking-wider">HOMELAB MATRIX:</span>
+    </div>
+
+    <!-- Homelab Icons Stream -->
+    <div class="flex items-center space-x-1.5 overflow-x-auto custom-scrollbar flex-1 justify-end">
+        {% for s in servicos_homelab %}
+        <a href="{{ s.url }}" target="_blank" title="{{ s.nome }} ({{ s.descricao }}) — Porta :{{ s.porta }}" class="px-2.5 py-1 rounded-lg bg-slate-900/90 border border-cyan-500/25 hover:border-cyan-400 hover:bg-cyan-950/40 hover:shadow-md hover:shadow-cyan-500/20 transition-all flex items-center space-x-1.5 text-slate-300 hover:text-white shrink-0 group">
+            <span class="text-cyan-400 font-mono text-[11px] group-hover:scale-110 transition-transform">#</span>
+            <span class="text-[9px] font-bold font-mono tracking-tight">{{ s.nome }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- MODAL OVERLAY: Gestão Direta de Agenda no Cockpit (Criar / Edit)  -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<div id="agenda-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md hidden transition-all duration-200 p-4">
+    <div class="hud-panel hud-bracket hud-glow-cyan w-full max-w-md bg-slate-900/95 border border-violet-500/40 p-5 rounded-2xl shadow-2xl shadow-violet-500/20 text-slate-200 font-mono relative animate-in fade-in zoom-in-95 duration-150">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-violet-500/30 pb-2.5 mb-4">
+            <div class="flex items-center space-x-2">
+                <span id="agenda-modal-icon" class="text-violet-400 text-base">📅</span>
+                <h3 id="agenda-modal-title" class="font-bold text-xs uppercase tracking-wider text-white">Novo Compromisso</h3>
+            </div>
+            <button type="button" onclick="window.AgendaModal.close()" class="text-slate-400 hover:text-white hover:bg-white/10 rounded-lg w-7 h-7 flex items-center justify-center text-sm transition-colors">
+                ✕
+            </button>
+        </div>
+
+        <!-- Form -->
+        <form id="agenda-modal-form" onsubmit="window.AgendaModal.handleSubmit(event)" class="space-y-3.5 text-xs">
+            <input type="hidden" id="agenda-form-id" value="">
+            <input type="hidden" id="agenda-form-origem" value="pessoal">
+
+            <!-- Category Selector (Tabs) -->
+            <div id="agenda-tipo-selector" class="grid grid-cols-2 gap-2 p-1 bg-slate-950/80 rounded-xl border border-white/10 text-center font-bold text-[11px]">
+                <button type="button" id="tipo-btn-pessoal" onclick="window.AgendaModal.setTipo('pessoal')" class="py-1.5 rounded-lg bg-violet-600/40 border border-violet-500/50 text-white transition-all">
+                    📅 Pessoal / Família
+                </button>
+                <button type="button" id="tipo-btn-saude" onclick="window.AgendaModal.setTipo('saude')" class="py-1.5 rounded-lg text-slate-400 hover:text-white transition-all">
+                    🩺 Consulta Médica
+                </button>
+            </div>
+
+            <!-- Título / Especialidade -->
+            <div>
+                <label id="agenda-label-titulo" class="block text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-bold">Título do Compromisso</label>
+                <input type="text" id="agenda-form-titulo" required placeholder="Ex: Jantar em família ou Pediatria" class="w-full bg-slate-950/80 border border-white/15 focus:border-violet-400 rounded-xl px-3 py-2 text-white placeholder-slate-600 outline-none transition-colors">
+            </div>
+
+            <!-- Data e Hora (Grid 2 colunas) -->
+            <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                    <label class="block text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-bold">Data</label>
+                    <input type="date" id="agenda-form-data" required class="w-full bg-slate-950/80 border border-white/15 focus:border-violet-400 rounded-xl px-3 py-2 text-white outline-none transition-colors">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-bold">Hora</label>
+                    <input type="time" id="agenda-form-hora" required class="w-full bg-slate-950/80 border border-white/15 focus:border-violet-400 rounded-xl px-3 py-2 text-white outline-none transition-colors">
+                </div>
+            </div>
+
+            <!-- Local / Clínica -->
+            <div>
+                <label id="agenda-label-local" class="block text-[10px] text-slate-400 uppercase tracking-wider mb-1 font-bold">Local</label>
+                <input type="text" id="agenda-form-local" placeholder="Ex: Restaurante O Fuso ou CUF Tejo" class="w-full bg-slate-950/80 border border-white/15 focus:border-violet-400 rounded-xl px-3 py-2 text-white placeholder-slate-600 outline-none transition-colors">
+            </div>
+
+            <!-- Campos Extras para Saúde (Médico / Paciente) -->
+            <div id="agenda-extra-saude" class="hidden space-y-3 pt-1 border-t border-rose-500/20">
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[10px] text-rose-300/80 uppercase tracking-wider mb-1 font-bold">Paciente</label>
+                        <select id="agenda-form-paciente" class="w-full bg-slate-950/80 border border-rose-500/30 focus:border-rose-400 rounded-xl px-3 py-2 text-white outline-none transition-colors">
+                            <option value="aa-stop-run">aa-stop-run</option>
+                            <option value="Member">Member</option>
+                            <option value="Junior">Junior</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-rose-300/80 uppercase tracking-wider mb-1 font-bold">Médico(a)</label>
+                        <input type="text" id="agenda-form-medico" placeholder="Ex: Dra. Sofia" class="w-full bg-slate-950/80 border border-rose-500/30 focus:border-rose-400 rounded-xl px-3 py-2 text-white placeholder-slate-600 outline-none transition-colors">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
+                <button type="button" id="agenda-btn-delete" onclick="window.AgendaModal.handleDelete()" class="hidden px-3 py-2 rounded-xl bg-rose-950/60 border border-rose-500/40 hover:bg-rose-900/80 text-rose-300 hover:text-white font-bold text-xs transition-all flex items-center space-x-1">
+                    <span>🗑️</span>
+                    <span>Desmarcar</span>
+                </button>
+
+                <div class="flex items-center space-x-2 ml-auto">
+                    <button type="button" onclick="window.AgendaModal.close()" class="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors">
+                        Cancel
+                    </button>
+                    <button type="button" id="agenda-btn-gcal" onclick="window.AgendaModal.sendToGoogleCalendar()" class="px-3 py-2 rounded-xl bg-sky-600/20 border border-sky-500/40 hover:bg-sky-500/30 text-sky-300 text-xs font-bold transition-colors flex items-center space-x-1.5" title="Abrir e gravar no Google Calendar">
+                        <span>🌐</span>
+                        <span>Google Cal ↗</span>
+                    </button>
+                    <button type="submit" id="agenda-btn-submit" class="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-violet-500/20 transition-all flex items-center space-x-1.5">
+                        <span id="agenda-submit-icon">✨</span>
+                        <span id="agenda-submit-text">Save</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+window.AgendaModal = {
+    tipoAtual: 'pessoal',
+    modo: 'create',
+
+    openCreate(preDate = null) {
+        this.modo = 'create';
+        document.getElementById('agenda-modal-title').innerText = 'Novo Compromisso';
+        document.getElementById('agenda-modal-icon').innerText = '📅';
+        document.getElementById('agenda-form-id').value = '';
+        document.getElementById('agenda-form-origem').value = 'pessoal';
+        document.getElementById('agenda-form-titulo').value = '';
+        document.getElementById('agenda-form-local').value = '';
+        document.getElementById('agenda-form-medico').value = '';
+        
+        if (preDate) {
+            document.getElementById('agenda-form-data').value = preDate;
+        } else {
+            const agora = new Date();
+            const yyyy = agora.getFullYear();
+            const mm = String(agora.getMonth() + 1).padStart(2, '0');
+            const dd = String(agora.getDate()).padStart(2, '0');
+            document.getElementById('agenda-form-data').value = `${yyyy}-${mm}-${dd}`;
+        }
+        document.getElementById('agenda-form-hora').value = '10:00';
+
+        document.getElementById('agenda-tipo-selector').classList.remove('hidden');
+        document.getElementById('agenda-btn-delete').classList.add('hidden');
+        document.getElementById('agenda-submit-icon').innerText = '✨';
+        document.getElementById('agenda-submit-text').innerText = 'Criar Compromisso';
+        
+        const deleteBtn = document.getElementById('agenda-btn-delete');
+        const submitBtn = document.getElementById('agenda-btn-submit');
+        const gcalBtn = document.getElementById('agenda-btn-gcal');
+        if (deleteBtn) deleteBtn.classList.add('hidden');
+        if (submitBtn) submitBtn.classList.remove('hidden');
+        if (gcalBtn) gcalBtn.classList.remove('hidden');
+        document.getElementById('agenda-form-titulo').readOnly = false;
+        document.getElementById('agenda-form-data').readOnly = false;
+        document.getElementById('agenda-form-hora').readOnly = false;
+        document.getElementById('agenda-form-local').readOnly = false;
+
+        this.setTipo('pessoal');
+        document.getElementById('agenda-modal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('agenda-form-titulo').focus(), 50);
+    },
+
+    openEdit(ev) {
+        this.modo = 'edit';
+        const isSaude = ev.tipo === 'saude' || (ev.id && String(ev.id).startsWith('saude-'));
+        const isGoogle = ev.origem === 'google' || (ev.id && String(ev.id).startsWith('google-'));
+        
+        const deleteBtn = document.getElementById('agenda-btn-delete');
+        const submitBtn = document.getElementById('agenda-btn-submit');
+        const gcalBtn = document.getElementById('agenda-btn-gcal');
+        if (gcalBtn) gcalBtn.classList.toggle('hidden', isGoogle);
+
+        if (isGoogle) {
+            document.getElementById('agenda-modal-title').innerText = 'Evento Google Calendar';
+            document.getElementById('agenda-modal-icon').innerText = '🌐';
+            document.getElementById('agenda-form-id').value = ev.id || '';
+            document.getElementById('agenda-form-origem').value = 'google';
+            deleteBtn.innerHTML = '<span>🗑️</span><span>Eliminar da AVA (Mantém no Google)</span>';
+            deleteBtn.classList.remove('hidden');
+            if (submitBtn) submitBtn.classList.add('hidden');
+            document.getElementById('agenda-form-titulo').readOnly = true;
+            document.getElementById('agenda-form-data').readOnly = true;
+            document.getElementById('agenda-form-hora').readOnly = true;
+            document.getElementById('agenda-form-local').readOnly = true;
+        } else {
+            document.getElementById('agenda-modal-title').innerText = isSaude ? 'Gestão de Consulta Médica' : 'Edit Compromisso';
+            document.getElementById('agenda-modal-icon').innerText = isSaude ? '🩺' : '📅';
+            document.getElementById('agenda-form-id').value = ev.id || '';
+            document.getElementById('agenda-form-origem').value = isSaude ? 'saude' : 'pessoal';
+            deleteBtn.innerHTML = '<span>✕</span><span>Eliminar</span>';
+            deleteBtn.classList.remove('hidden');
+            if (submitBtn) submitBtn.classList.remove('hidden');
+            document.getElementById('agenda-form-titulo').readOnly = false;
+            document.getElementById('agenda-form-data').readOnly = false;
+            document.getElementById('agenda-form-hora').readOnly = false;
+            document.getElementById('agenda-form-local').readOnly = false;
+        }
+        
+        let tituloLimpo = ev.titulo || '';
+        if (isSaude && tituloLimpo.startsWith('Consulta: ')) {
+            tituloLimpo = tituloLimpo.replace('Consulta: ', '');
+        }
+        document.getElementById('agenda-form-titulo').value = tituloLimpo;
+        document.getElementById('agenda-form-data').value = ev.data || '';
+        document.getElementById('agenda-form-hora').value = ev.hora || '10:00';
+        document.getElementById('agenda-form-local').value = ev.local || '';
+        document.getElementById('agenda-form-medico').value = ev.medico || '';
+        if (ev.paciente) {
+            document.getElementById('agenda-form-paciente').value = ev.paciente;
+        }
+
+        document.getElementById('agenda-tipo-selector').classList.add('hidden');
+        document.getElementById('agenda-submit-icon').innerText = '💾';
+        document.getElementById('agenda-submit-text').innerText = 'Save Alterações';
+
+        this.setTipo(isSaude ? 'saude' : 'pessoal');
+        document.getElementById('agenda-modal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('agenda-form-titulo').focus(), 50);
+    },
+
+    setTipo(tipo) {
+        this.tipoAtual = tipo;
+        const btnPessoal = document.getElementById('tipo-btn-pessoal');
+        const btnSaude = document.getElementById('tipo-btn-saude');
+        const extraSaude = document.getElementById('agenda-extra-saude');
+        const labelTitulo = document.getElementById('agenda-label-titulo');
+        const labelLocal = document.getElementById('agenda-label-local');
+
+        if (tipo === 'saude') {
+            btnSaude.className = 'py-1.5 rounded-lg bg-rose-600/40 border border-rose-500/50 text-white font-bold transition-all';
+            btnPessoal.className = 'py-1.5 rounded-lg text-slate-400 hover:text-white transition-all';
+            extraSaude.classList.remove('hidden');
+            labelTitulo.innerText = 'Especialidade Médica';
+            labelLocal.innerText = 'Hospital / Clínica';
+        } else {
+            btnPessoal.className = 'py-1.5 rounded-lg bg-violet-600/40 border border-violet-500/50 text-white font-bold transition-all';
+            btnSaude.className = 'py-1.5 rounded-lg text-slate-400 hover:text-white transition-all';
+            extraSaude.classList.add('hidden');
+            labelTitulo.innerText = 'Título do Compromisso';
+            labelLocal.innerText = 'Local';
+        }
+    },
+
+    close() {
+        document.getElementById('agenda-modal').classList.add('hidden');
+    },
+
+    async handleSubmit(e) {
+        e.preventDefault();
+        const id = document.getElementById('agenda-form-id').value;
+        const titulo = document.getElementById('agenda-form-titulo').value.trim();
+        const data = document.getElementById('agenda-form-data').value;
+        const hora = document.getElementById('agenda-form-hora').value;
+        const local = document.getElementById('agenda-form-local').value.trim();
+        const paciente = document.getElementById('agenda-form-paciente').value;
+        const medico = document.getElementById('agenda-form-medico').value.trim();
+
+        const dataInicioIso = `${data}T${hora}:00Z`;
+
+        const payload = {
+            titulo: this.tipoAtual === 'saude' && !titulo.startsWith('Consulta: ') ? `Consulta: ${titulo}` : titulo,
+            data_inicio: dataInicioIso,
+            local: local,
+            tipo: this.tipoAtual,
+            paciente: paciente,
+            medico: medico,
+        };
+
+        const submitBtn = document.getElementById('agenda-btn-submit');
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50');
+
+        try {
+            let res;
+            if (this.modo === 'edit' && id) {
+                res = await fetch(`/api/agenda/evento/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                res = await fetch('/api/agenda/evento', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            if (res.ok) {
+                this.close();
+                window.location.reload();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert(err.detail || 'Erro ao gravar compromisso.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erro de comunicação ao gravar.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50');
+        }
+    },
+
+    async handleDelete() {
+        const id = document.getElementById('agenda-form-id').value;
+        if (!id) return;
+        const msg = String(id).startsWith('google-')
+            ? 'Desejas eliminar este evento da AVA? O evento continuará intacto no teu Google Calendar.'
+            : 'Tens a certeza que desejas desmarcar / eliminar este compromisso?';
+        if (!confirm(msg)) return;
+
+        try {
+            const res = await fetch(`/api/agenda/evento/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                this.close();
+                window.location.reload();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert(err.detail || 'Erro ao eliminar compromisso.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erro de comunicação.');
+        }
+    },
+
+    async deleteDirect(id) {
+        const msg = String(id).startsWith('google-')
+            ? 'Desejas eliminar este evento da AVA? O evento continuará intacto no teu Google Calendar.'
+            : 'Desejas desmarcar / eliminar este compromisso?';
+        if (!confirm(msg)) return;
+        try {
+            const res = await fetch(`/api/agenda/evento/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert(err.detail || 'Não foi possível eliminar.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erro de comunicação.');
+        }
+    },
+
+    sendToGoogleCalendar() {
+        const titulo = document.getElementById('agenda-form-titulo').value.trim() || 'Compromisso AVA';
+        const data = document.getElementById('agenda-form-data').value;
+        const hora = document.getElementById('agenda-form-hora').value || '10:00';
+        const local = document.getElementById('agenda-form-local').value.trim();
+        const paciente = document.getElementById('agenda-form-paciente')?.value;
+        const medico = document.getElementById('agenda-form-medico')?.value.trim();
+
+        if (!data) {
+            alert('Por favor indica uma data antes de abrir no Google Calendar.');
+            return;
+        }
+
+        let desc = 'Criado a partir da AVA';
+        if (this.tipoAtual === 'saude') {
+            desc = `Consulta Médica\nPaciente: ${paciente || 'aa-stop-run'}\nMédico: ${medico || 'N/A'}`;
+        }
+
+        const dataLimpa = data.replace(/-/g, '');
+        const horaLimpa = hora.replace(/:/g, '');
+        const startIso = `${dataLimpa}T${horaLimpa}00`;
+        const [h, m] = hora.split(':').map(Number);
+        const fimH = String(Math.min(23, (h || 0) + 1)).padStart(2, '0');
+        const endIso = `${dataLimpa}T${fimH}${String(m || 0).padStart(2, '0')}00`;
+
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(titulo)}&dates=${startIso}/${endIso}&details=${encodeURIComponent(desc)}&location=${encodeURIComponent(local)}`;
+        window.open(url, '_blank');
+    }
+};
+
+// Fechar com Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('agenda-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            window.AgendaModal.close();
+        }
+    }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// COCKPIT MINI-CALENDAR: Grelha do Mês & Filtro Interativo
+// ══════════════════════════════════════════════════════════════════
+window.CockpitCalendar = {
+    currentYear: 2026,
+    currentMonth: 8,
+    selectedDayStr: null,
+    monthData: null,
+    upcomingEvents: [],
+
+    init(initialEvents) {
+        this.upcomingEvents = initialEvents || [];
+        const hoje = new Date();
+        this.currentYear = hoje.getFullYear() >= 2026 ? hoje.getFullYear() : 2026;
+        this.currentMonth = hoje.getFullYear() >= 2026 ? (hoje.getMonth() + 1) : 8;
+        this.loadAndRender(this.currentYear, this.currentMonth);
+    },
+
+    async loadAndRender(ano, mes) {
+        this.currentYear = ano;
+        this.currentMonth = mes;
+        try {
+            const res = await fetch(`/api/agenda?ano=${ano}&mes=${mes}`);
+            if (res.ok) {
+                this.monthData = await res.json();
+                this.renderGrid();
+            }
+        } catch (e) {
+            console.error('Erro ao carregar mini-calendário:', e);
+        }
+    },
+
+    changeMonth(delta) {
+        let m = this.currentMonth + delta;
+        let a = this.currentYear;
+        if (m > 12) { m = 1; a++; }
+        if (m < 1) { m = 12; a--; }
+        this.selectedDayStr = null;
+        this.loadAndRender(a, m);
+        this.renderFeed();
+    },
+
+    goToday() {
+        const hoje = new Date();
+        const a = hoje.getFullYear() >= 2026 ? hoje.getFullYear() : 2026;
+        const m = hoje.getFullYear() >= 2026 ? (hoje.getMonth() + 1) : 8;
+        this.selectedDayStr = null;
+        this.loadAndRender(a, m);
+        this.renderFeed();
+    },
+
+    renderGrid() {
+        if (!this.monthData) return;
+        const titleEl = document.getElementById('cockpit-cal-month-title');
+        const gridEl = document.getElementById('cockpit-cal-grid');
+        if (titleEl) titleEl.innerText = `${this.monthData.mes_nome} ${this.monthData.ano}`;
+        if (!gridEl) return;
+
+        const ano = this.monthData.ano;
+        const mes = this.monthData.mes;
+        const diasComEventos = this.monthData.dias_com_eventos || {};
+
+        // Primeiro dia do mês (0 = Dom, 1 = Seg, ..., 6 = Sab)
+        const primeiroDia = new Date(ano, mes - 1, 1).getDay();
+        let offset = primeiroDia - 1;
+        if (offset < 0) offset = 6;
+
+        const totalDias = new Date(ano, mes, 0).getDate();
+        const hojeObj = new Date();
+        const hojeStr = `${hojeObj.getFullYear()}-${String(hojeObj.getMonth() + 1).padStart(2, '0')}-${String(hojeObj.getDate()).padStart(2, '0')}`;
+
+        let html = '';
+        for (let i = 0; i < offset; i++) {
+            html += `<div class="h-6 rounded bg-slate-950/20 opacity-15"></div>`;
+        }
+
+        for (let d = 1; d <= totalDias; d++) {
+            const dStr = String(d).padStart(2, '0');
+            const mStr = String(mes).padStart(2, '0');
+            const dataIso = `${ano}-${mStr}-${dStr}`;
+
+            const isHoje = (dataIso === hojeStr || (ano === 2026 && mes === 8 && d === 26));
+            const isSelected = (dataIso === this.selectedDayStr);
+            const dots = diasComEventos[dataIso] || [];
+
+            let cls = 'border-white/5 bg-slate-900/60 text-slate-300 hover:border-violet-500/40 hover:bg-slate-800/80';
+            if (isHoje) {
+                cls = 'border-cyan-400 bg-cyan-950/40 text-cyan-300 font-bold shadow-[0_0_8px_rgba(6,182,212,0.3)]';
+            }
+            if (isSelected) {
+                cls += ' ring-2 ring-violet-400 bg-violet-950/60 font-bold text-white';
+            }
+
+            let dotsHtml = '';
+            if (dots.length > 0) {
+                dotsHtml = `<div class="flex justify-center items-center gap-0.5 mt-0.5">` +
+                    dots.slice(0, 3).map(cor => {
+                        let bg = 'bg-violet-400 shadow-[0_0_5px_rgba(139,92,246,0.8)]';
+                        if (cor === 'rose') bg = 'bg-rose-400 shadow-[0_0_5px_rgba(244,63,94,0.8)]';
+                        if (cor === 'emerald') bg = 'bg-emerald-400 shadow-[0_0_5px_rgba(16,185,129,0.8)]';
+                        if (cor === 'cyan') bg = 'bg-cyan-400 shadow-[0_0_5px_rgba(6,182,212,0.8)]';
+                        if (cor === 'sky') bg = 'bg-sky-400 shadow-[0_0_5px_rgba(56,189,248,0.8)]';
+                        return `<span class="w-1 h-1 rounded-full ${bg}"></span>`;
+                    }).join('') +
+                    `</div>`;
+            }
+
+            html += `
+                <div onclick="window.CockpitCalendar.selectDay('${dataIso}')" class="h-6 rounded border flex flex-col justify-between items-center py-0.5 cursor-pointer transition-all ${cls}" title="${dataIso}">
+                    <span class="text-[10px] leading-none">${d}</span>
+                    ${dotsHtml}
+                </div>
+            `;
+        }
+
+        gridEl.innerHTML = html;
+    },
+
+    selectDay(dataIso) {
+        if (this.selectedDayStr === dataIso) {
+            this.selectedDayStr = null;
+        } else {
+            this.selectedDayStr = dataIso;
+        }
+        this.renderGrid();
+        this.renderFeed();
+    },
+
+    clearFilter() {
+        this.selectedDayStr = null;
+        this.renderGrid();
+        this.renderFeed();
+    },
+
+    renderFeed() {
+        const feedEl = document.getElementById('cockpit-agenda-feed');
+        const titleEl = document.getElementById('cockpit-feed-title');
+        const clearBtn = document.getElementById('cockpit-feed-clear-filter');
+        if (!feedEl) return;
+
+        if (this.selectedDayStr) {
+            const dataIso = this.selectedDayStr;
+            const partes = dataIso.split('-');
+            const dataFormatada = `${partes[2]}/${partes[1]}`;
+            
+            if (titleEl) titleEl.innerText = `Compromissos // ${dataFormatada}`;
+            if (clearBtn) clearBtn.classList.remove('hidden');
+
+            const eventosMes = (this.monthData && this.monthData.eventos) ? this.monthData.eventos : [];
+            const filtrados = eventosMes.filter(e => e.data === dataIso);
+
+            if (filtrados.length === 0) {
+                feedEl.innerHTML = `
+                    <div class="py-4 text-center text-slate-500 font-mono text-[10px] space-y-2">
+                        <p>Nenhum compromisso para ${dataFormatada}.</p>
+                        <button type="button" onclick="window.AgendaModal.openCreate('${dataIso}')" class="px-2.5 py-1 rounded-lg bg-violet-600/30 border border-violet-500/40 text-violet-300 hover:text-white text-[10px] font-mono transition-all">
+                            + Marcar neste dia
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            feedEl.innerHTML = filtrados.map(ev => this.renderEventCard(ev)).join('');
+        } else {
+            if (titleEl) titleEl.innerText = 'Próximos Compromissos';
+            if (clearBtn) clearBtn.classList.add('hidden');
+
+            if (!this.upcomingEvents || this.upcomingEvents.length === 0) {
+                feedEl.innerHTML = `
+                    <div class="py-6 text-center text-slate-500 font-mono text-[11px]">
+                        Nenhum compromisso marcado para breve.
+                    </div>
+                `;
+                return;
+            }
+
+            feedEl.innerHTML = this.upcomingEvents.map(ev => this.renderEventCard(ev)).join('');
+        }
+    },
+
+    renderEventCard(ev) {
+        let corBadge = 'bg-violet-500/20 text-violet-300 border-violet-500/40';
+        let corBorder = 'border-violet-500/30 hover:border-violet-400/60';
+        let icone = '📅';
+        if (ev.cor === 'rose') {
+            corBadge = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+            corBorder = 'border-rose-500/30 hover:border-rose-400/60';
+            icone = '🩺';
+        } else if (ev.cor === 'emerald') {
+            corBadge = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+            corBorder = 'border-emerald-500/30 hover:border-emerald-400/60';
+            icone = '🚗';
+        } else if (ev.cor === 'cyan') {
+            corBadge = 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40';
+            corBorder = 'border-cyan-500/30 hover:border-cyan-400/60';
+            icone = '💳';
+        } else if (ev.cor === 'sky') {
+            corBadge = 'bg-sky-500/20 text-sky-300 border-sky-500/40';
+            corBorder = 'border-sky-500/30 hover:border-sky-400/60';
+            icone = '🌐';
+        }
+
+        const dataStr = ev.data ? `${ev.data.slice(8, 10)}/${ev.data.slice(5, 7)}` : '';
+        const evJson = JSON.stringify(ev).replace(/"/g, '&quot;');
+        const editAttr = ev.editavel ? `onclick="window.AgendaModal.openEdit(${evJson})" title="Clica para ver ou gerir este compromisso" style="cursor: pointer;"` : '';
+        const isGoogle = ev.origem === 'google' || (ev.id && String(ev.id).startsWith('google-'));
+        const delTitle = isGoogle ? 'Eliminar da AVA (mantém no Google Calendar)' : 'Desmarcar / Remove';
+        const deleteBtn = ev.editavel ? `
+            <button type="button" onclick="event.stopPropagation(); window.AgendaModal.deleteDirect('${ev.id}')" title="${delTitle}" class="text-slate-500 hover:text-rose-400 hover:bg-rose-500/20 rounded px-1.5 py-0.5 text-xs font-mono transition-all">
+                ✕
+            </button>
+        ` : '';
+
+        return `
+            <div ${editAttr} class="group p-2 rounded-xl bg-slate-900/90 border ${corBorder} flex items-center justify-between text-xs font-mono transition-all hover:bg-slate-800/80 hover:scale-[1.01]">
+                <div class="flex items-center space-x-2 min-w-0">
+                    <div class="flex flex-col items-center shrink-0">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold border ${corBadge}">
+                            ${ev.hora}
+                        </span>
+                        <span class="text-[8px] text-slate-500 font-mono mt-0.5">${dataStr}</span>
+                    </div>
+                    <div class="truncate min-w-0">
+                        <strong class="text-white text-[11px] block truncate font-medium group-hover:text-cyan-300 transition-colors">${ev.titulo}</strong>
+                        <span class="text-[9px] text-slate-400 block truncate">${ev.subtitulo || ev.local || 'Ecossistema AVA'}</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-1.5 shrink-0 pl-1">
+                    <span class="text-xs">${icone}</span>
+                    ${deleteBtn}
+                </div>
+            </div>
+        `;
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const initialEvents = {{ dados.agenda_eventos | tojson | safe }};
+    window.CockpitCalendar.init(initialEvents);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}Pharmacy & Medications — AVA Saúde{% endblock %}
+
+{% block content %}
+<div class="dashboard-header flex justify-between items-center mb-6">
+  <div>
+    <h1 class="page-title">💊 Pharmacy & Medications</h1>
+    <p style="font-size: var(--font-xs); color: var(--c-muted); margin-top: 2px;">Gestão de terapêuticas familiares, horários de toma, controlo de stock e receitas SNS.</p>
+  </div>
+  <div class="flex gap-2">
+    <button onclick="document.getElementById('modal-novo-medicamento').style.display='flex'" class="btn-primary" style="cursor: pointer;">
+      ➕ Novo Medicamento
+    </button>
+    <button onclick="document.getElementById('modal-nova-prescricao').style.display='flex'" class="btn-primary" style="background: var(--bg-surface-alt); color: var(--c-ink); border: 1px solid var(--c-border); cursor: pointer;">
+      📄 Registar Receita SNS
+    </button>
+  </div>
+</div>
+
+<!-- KPIs de Farmácia -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+  <div class="card" style="padding: 18px 20px;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Medicamentos Ativos</div>
+    <div style="font-size: 26px; font-weight: 700; color: var(--c-ink);">{{ medicamentos|length }}</div>
+    <div style="font-size: 11px; color: var(--c-muted); margin-top: 4px;">Em acompanhamento regular</div>
+  </div>
+
+  <div class="card" style="padding: 18px 20px;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: {% if alertas_stock %}var(--c-negative){% else %}var(--c-positive){% endif %}; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Alertas de Reposição</div>
+    <div style="font-size: 26px; font-weight: 700; color: {% if alertas_stock %}var(--c-negative){% else %}var(--c-positive){% endif %};">{{ alertas_stock|length }}</div>
+    <div style="font-size: 11px; color: var(--c-muted); margin-top: 4px;">{% if alertas_stock %}Necessitam de nova embalagem/receita{% else %}Todos os stocks em nível seguro{% endif %}</div>
+  </div>
+
+  <div class="card" style="padding: 18px 20px;">
+    <div style="font-size: var(--font-xs); font-weight: 600; color: var(--c-accent-blue); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Receitas SNS Ativas</div>
+    <div style="font-size: 26px; font-weight: 700; color: var(--c-accent-blue);">{{ prescricoes|length }}</div>
+    <div style="font-size: 11px; color: var(--c-muted); margin-top: 4px;">Disponíveis para dispensa</div>
+  </div>
+</div>
+
+<!-- Alertas Críticos de Low Stock -->
+{% if alertas_stock %}
+<div class="card mb-8" style="padding: 20px; border-left: 4px solid var(--c-negative); background: rgba(220, 38, 38, 0.03);">
+  <div class="flex items-center gap-2 mb-3">
+    <span style="font-size: 16px;">⚠️</span>
+    <h2 style="font-size: 14px; font-weight: 700; color: var(--c-negative); text-transform: uppercase; letter-spacing: 0.05em;">Atenção: Critical Stock de Medicação</h2>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    {% for a in alertas_stock %}
+    <div class="flex justify-between items-center p-3" style="background: var(--bg-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md);">
+      <div>
+        <div style="font-weight: 700; color: var(--c-ink); font-size: 14px;">{{ a.nome }} ({{ a.dosagem }})</div>
+        <div style="font-size: 11px; color: var(--c-muted);">Titular: <span style="font-weight: 600; color: var(--c-ink);">{{ a.titular }}</span> • Restam apenas <span style="font-weight: 700; color: var(--c-negative);">{{ a.stock_atual }} pills</span> (~{{ a.dias_autonomia }} dias)</div>
+      </div>
+      <button onclick="abrirModalRepor({{ a.id }}, '{{ a.nome }}')" class="btn-primary" style="font-size: 11px; padding: 6px 12px; cursor: pointer;">
+        ➕ Refill Box
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Grelha de Medicamentos por Membro -->
+<div class="mb-8">
+  <div class="flex justify-between items-center mb-4">
+    <h2 style="font-size: 16px; font-weight: 700; color: var(--c-ink);">Terapêuticas & Horários Diários</h2>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for m in medicamentos %}
+    {% set doses_dia = 1.0 %}
+    {% if m.horarios %}
+      {% set doses_dia = m.horarios|map(attribute='quantidade_dose')|map('float')|sum %}
+    {% endif %}
+    {% if doses_dia <= 0 %}{% set doses_dia = 1.0 %}{% endif %}
+    {% set dias_autonomia = (m.stock_atual / doses_dia)|int %}
+
+    <div class="card flex flex-col justify-between" style="padding: 20px;">
+      <div>
+        <div class="flex justify-between items-start mb-2">
+          <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-accent-blue); background: rgba(37, 99, 235, 0.1); padding: 2px 8px; border-radius: 4px;">
+            👤 {{ m.titular }}
+          </span>
+          <span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; {% if dias_autonomia > 14 %}background: rgba(22, 163, 74, 0.1); color: var(--c-positive); border: 1px solid rgba(22, 163, 74, 0.3);{% elif dias_autonomia >= 5 %}background: rgba(217, 119, 6, 0.1); color: var(--c-accent-amber); border: 1px solid rgba(217, 119, 6, 0.3);{% else %}background: rgba(220, 38, 38, 0.1); color: var(--c-negative); border: 1px solid rgba(220, 38, 38, 0.3);{% endif %}">
+            {{ m.stock_atual }} {{ m.unidade_medida }} (~{{ dias_autonomia }} dias)
+          </span>
+        </div>
+
+        <h3 style="font-size: 18px; font-weight: 700; color: var(--c-ink); margin-top: 6px;">{{ m.nome }}</h3>
+        <div style="font-size: 12px; color: var(--c-muted); margin-bottom: 12px;">
+          Dosagem: <span style="font-weight: 600; color: var(--c-ink);">{{ m.dosagem }}</span>
+          {% if m.principio_ativo %}• <em>{{ m.principio_ativo }}</em>{% endif %}
+        </div>
+
+        <!-- Barra de Progresso de Stock -->
+        <div style="margin-bottom: 16px;">
+          <div class="flex justify-between text-xs mb-1" style="font-size: 10px; color: var(--c-muted);">
+            <span>Nível de Reserva</span>
+            <span>Alerta em: {{ m.stock_minimo_alerta }} un.</span>
+          </div>
+          <div style="width: 100%; height: 6px; background: var(--bg-surface-alt); border-radius: 9999px; overflow: hidden; border: 1px solid var(--c-border);">
+            <div style="height: 100%; width: {% if dias_autonomia > 30 %}100%{% else %}{{ (dias_autonomia * 3.3)|int }}%{% endif %}; background: {% if dias_autonomia > 14 %}var(--c-positive){% elif dias_autonomia >= 5 %}var(--c-accent-amber){% else %}var(--c-negative){% endif %};"></div>
+          </div>
+        </div>
+
+        <!-- Horários de Toma -->
+        <div style="padding-top: 12px; border-top: 1px solid var(--c-border);">
+          <div style="font-size: 11px; font-weight: 600; color: var(--c-muted); text-transform: uppercase; margin-bottom: 8px;">⏰ Horários Diários:</div>
+          <div class="flex flex-col gap-2">
+            {% for h in m.horarios %}
+            <div class="flex justify-between items-center p-2" style="background: var(--bg-surface-alt); border-radius: var(--radius-sm); font-size: 12px;">
+              <div class="flex items-center gap-2">
+                <span style="font-family: var(--font-mono); font-weight: 700; color: var(--c-ink);">{{ h.hora }}</span>
+                <span style="color: var(--c-muted); font-size: 11px;">({{ h.quantidade_dose }} {{ m.forma_farmaceutica }})</span>
+              </div>
+              <button onclick="registarTomaRapida({{ m.id }}, '{{ m.nome }}')" class="btn-primary" style="font-size: 10px; padding: 3px 8px; background: rgba(37, 99, 235, 0.15); color: var(--c-accent-blue); border: 1px solid rgba(37, 99, 235, 0.3); border-radius: 4px; cursor: pointer; font-weight: 600;">
+                ✔️ Taken
+              </button>
+            </div>
+            {% else %}
+            <div style="font-size: 11px; color: var(--c-muted);">Sem horários programados.</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if m.instrucoes_toma %}
+        <div style="margin-top: 12px; font-size: 11px; color: var(--c-muted); background: var(--bg-surface-alt); padding: 8px 10px; border-radius: 6px;">
+          💡 <em>{{ m.instrucoes_toma }}</em>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="flex gap-2 mt-4 pt-3" style="border-top: 1px solid var(--c-border);">
+        <button onclick="abrirModalRepor({{ m.id }}, '{{ m.nome }}')" class="btn-primary" style="flex: 1; font-size: 11px; padding: 6px 0; text-align: center; background: var(--bg-surface-alt); color: var(--c-ink); border: 1px solid var(--c-border); cursor: pointer;">
+          ➕ Repor Stock
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Secção: Carteira de Receitas Eletrónicas SNS -->
+<div class="card mb-8" style="padding: 24px;">
+  <div class="flex justify-between items-center mb-4">
+    <div>
+      <h2 style="font-size: 16px; font-weight: 700; color: var(--c-ink); display: flex; align-items: center; gap: 8px;">
+        <span>📄 Carteira de Receitas Eletrónicas (SNS)</span>
+        <span style="font-size: 11px; padding: 2px 8px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: 9999px; color: var(--c-muted);">{{ prescricoes|length }} prescrições</span>
+      </h2>
+      <p style="font-size: 12px; color: var(--c-muted); margin-top: 2px;">Códigos de acesso e dispensa prontos a apresentar no balcão da farmácia.</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for p in prescricoes %}
+    <div style="padding: 16px; background: var(--bg-surface-alt); border: 1px solid var(--c-border); border-radius: var(--radius-md);">
+      <div class="flex justify-between items-start mb-2">
+        <span style="font-size: 11px; font-weight: 700; color: var(--c-accent-blue);">👤 {{ p.titular }}</span>
+        <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: rgba(22, 163, 74, 0.1); color: var(--c-positive);">{{ p.estado }}</span>
+      </div>
+
+      <div style="margin: 12px 0;">
+        <div style="font-size: 11px; color: var(--c-muted);">Access Code:</div>
+        <div style="font-family: var(--font-mono); font-size: 18px; font-weight: 800; color: var(--c-ink); letter-spacing: 0.1em;">{{ p.codigo_acesso or '----' }}</div>
+        
+        <div style="font-size: 11px; color: var(--c-muted); margin-top: 6px;">Dispense Code:</div>
+        <div style="font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--c-accent-blue); letter-spacing: 0.05em;">{{ p.codigo_opcao or '----' }}</div>
+      </div>
+
+      <div style="font-size: 11px; color: var(--c-muted); border-top: 1px solid var(--c-border); padding-top: 8px;">
+        Receita: <span style="font-family: var(--font-mono);">{{ p.numero_receita_sns or 'N/D' }}</span><br>
+        {% if p.medico_prescritor %}Médico: {{ p.medico_prescritor }}<br>{% endif %}
+        {% if p.data_validade %}Expiry Date: {{ p.data_validade.strftime('%d/%m/%Y') }}{% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div style="grid-column: 1 / -1; padding: 24px; text-align: center; color: var(--c-muted); font-size: 12px;">
+      Nenhuma receita eletrónica registada. Podes adicionar com o botão acima.
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal: Repor Stock -->
+<div id="modal-repor-stock" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
+  <div class="card" style="width: 100%; max-width: 400px; padding: 24px;">
+    <h3 id="modal-repor-titulo" style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">➕ Repor Stock</h3>
+    <input type="hidden" id="repor-med-id">
+    <div class="mb-4">
+      <label style="font-size: 12px; color: var(--c-muted); display: block; margin-bottom: 4px;">Quantidade a adicionar (unidades/pills):</label>
+      <input type="number" id="repor-quantidade" value="30" min="1" max="500" style="width: 100%; padding: 8px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); font-size: 14px; background: var(--bg-surface-alt); color: var(--c-ink);">
+    </div>
+    <div class="flex justify-end gap-2">
+      <button onclick="document.getElementById('modal-repor-stock').style.display='none'" class="btn-primary" style="background: var(--bg-surface-alt); color: var(--c-ink); border: 1px solid var(--c-border);">Cancel</button>
+      <button onclick="submeterReporStock()" class="btn-primary">Confirm Reposição</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Novo Medicamento -->
+<div id="modal-novo-medicamento" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
+  <div class="card" style="width: 100%; max-width: 500px; padding: 24px; max-height: 90vh; overflow-y: auto;">
+    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">💊 Registar Novo Medicamento</h3>
+    <form id="form-novo-med" onsubmit="submeterNovoMedicamento(event)">
+      <div class="mb-3">
+        <label style="font-size: 12px; color: var(--c-muted);">Titular:</label>
+        <select id="novo-titular" required style="width: 100%; padding: 8px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--bg-surface-alt); color: var(--c-ink);">
+          <option value="aa-stop-run">aa-stop-run</option>
+          <option value="Member">Member</option>
+          <option value="Junior">Junior</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label style="font-size: 12px; color: var(--c-muted);">Nome do Medicamento:</label>
+        <input type="text" id="novo-nome" placeholder="Ex: Sertralina" required style="width: 100%; padding: 8px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--bg-surface-alt); color: var(--c-ink);">
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted);">Dosagem:</label>
+          <input type="text" id="novo-dosagem" placeholder="Ex: 50 mg" required style="width: 100%; padding: 8px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--bg-surface-alt); color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted);">Forma:</label>
+          <select id="novo-forma" style="width: 100%; padding: 8px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--bg-surface-alt); color: var(--c-ink);">
+            <option value="pill">Comprimido</option>
+            <option value="capsula">Cápsula</option>
+            <option value="gotas">Gotas</option>
+            <option value="spray">Spray</option>
+            <option value="pomada">Pomada</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted);">Stock Inicial:</label>
+          <input type="number" id="novo-stock" value="30" min="0" style="width: 100%; padding: 8px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--bg-surface-alt); color: var(--c-ink);">
+        </div>
+        <div>
+          <label style="font-size: 12px; color: var(--c-muted);">Alerta Low Stock:</label>
+          <input type="number" id="novo-stock-alerta" value="7" min="1" style="width: 100%; padding: 8px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--bg-surface-alt); color: var(--c-ink);">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label style="font-size: 12px; color: var(--c-muted);">Horário Principal de Toma (HH:MM):</label>
+        <input type="time" id="novo-hora" value="08:30" required style="width: 100%; padding: 8px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--bg-surface-alt); color: var(--c-ink);">
+      </div>
+      <div class="mb-4">
+        <label style="font-size: 12px; color: var(--c-muted);">Instruções / Notas:</label>
+        <input type="text" id="novo-instrucoes" placeholder="Ex: Tomar após o pequeno-almoço com água" style="width: 100%; padding: 8px; border: 1px solid var(--c-border); border-radius: var(--radius-sm); background: var(--bg-surface-alt); color: var(--c-ink);">
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="document.getElementById('modal-novo-medicamento').style.display='none'" class="btn-primary" style="background: var(--bg-surface-alt); color: var(--c-ink); border: 1px solid var(--c-border);">Cancel</button>
+        <button type="submit" class="btn-primary">Save Medicamento</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function abrirModalRepor(id, nome) {
+  document.getElementById('repor-med-id').value = id;
+  document.getElementById('modal-repor-titulo').innerText = '➕ Repor Stock: ' + nome;
+  document.getElementById('modal-repor-stock').style.display = 'flex';
+}
+
+async function submeterReporStock() {
+  const id = document.getElementById('repor-med-id').value;
+  const qtd = parseInt(document.getElementById('repor-quantidade').value, 10);
+  if (!id || !qtd) return;
+
+  const resp = await fetch(`/api/saude/medicamentos/${id}/repor-stock`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quantidade: qtd })
+  });
+
+  if (resp.ok) {
+    window.location.reload();
+  } else {
+    alert('Erro ao repor stock.');
+  }
+}
+
+async function registarTomaRapida(id, nome) {
+  const resp = await fetch(`/api/saude/medicamentos/${id}/toma`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ registado_via: 'web_ui' })
+  });
+
+  if (resp.ok) {
+    const data = await resp.json();
+    alert(`✔️ Toma de ${nome} registada! Novo stock: ${data.stock_atual} unidades.`);
+    window.location.reload();
+  } else {
+    alert('Erro ao registar toma.');
+  }
+}
+
+async function submeterNovoMedicamento(e) {
+  e.preventDefault();
+  const payload = {
+    titular: document.getElementById('novo-titular').value,
+    nome: document.getElementById('novo-nome').value,
+    dosagem: document.getElementById('novo-dosagem').value,
+    forma_farmaceutica: document.getElementById('novo-forma').value,
+    stock_atual: parseInt(document.getElementById('novo-stock').value, 10),
+    stock_minimo_alerta: parseInt(document.getElementById('novo-stock-alerta').value, 10),
+    instrucoes_toma: document.getElementById('novo-instrucoes').value,
+    horarios: [{ hora: document.getElementById('novo-hora').value, quantidade_dose: 1.0, dias_semana: 'todos' }]
+  };
+
+  const resp = await fetch('/api/saude/medicamentos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (resp.ok) {
+    window.location.reload();
+  } else {
+    alert('Erro ao guardar medicamento.');
+  }
+}
+</script>
+{% endblock %}

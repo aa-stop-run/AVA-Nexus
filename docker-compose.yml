@@ -1,0 +1,126 @@
+﻿services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ava-postgres
+    restart: unless-stopped
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ava}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ava}
+      POSTGRES_DB: ${POSTGRES_DB:-ava}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ava}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  financas:
+    build: ./apps/financas
+    container_name: ava-financas
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${FINANCAS_PORT:-8081}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ava}:${POSTGRES_PASSWORD:-ava}@postgres:5432/${POSTGRES_DB:-ava}
+      PAPERLESS_URL: ${PAPERLESS_URL:-http://localhost:8000}
+      PAPERLESS_TOKEN: ${PAPERLESS_TOKEN:-}
+    networks:
+      - default
+
+  veiculos:
+    build: ./apps/veiculos
+    container_name: ava-veiculos
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${VEICULOS_PORT:-8082}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ava}:${POSTGRES_PASSWORD:-ava}@postgres:5432/${POSTGRES_DB:-ava}
+    networks:
+      - default
+
+  saude:
+    build: ./apps/saude
+    container_name: ava-saude
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${SAUDE_PORT:-8083}:8000"
+    volumes:
+      - ./documentos_saude:/app/documentos_saude
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ava}:${POSTGRES_PASSWORD:-ava}@postgres:5432/${POSTGRES_DB:-ava}
+      PAPERLESS_URL: ${PAPERLESS_URL:-http://localhost:8000}
+      PAPERLESS_TOKEN: ${PAPERLESS_TOKEN:-}
+      DOCUMENTOS_DIR: /app/documentos_saude
+      GOOGLE_CALENDAR_ICAL_URL: ${GOOGLE_CALENDAR_ICAL_URL:-}
+    networks:
+      - default
+
+  casa:
+    build: ./apps/casa
+    container_name: ava-casa
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${CASA_PORT:-8084}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ava}:${POSTGRES_PASSWORD:-ava}@postgres:5432/${POSTGRES_DB:-ava}
+      PAPERLESS_URL: ${PAPERLESS_URL:-http://localhost:8000}
+      PAPERLESS_TOKEN: ${PAPERLESS_TOKEN:-}
+    networks:
+      - default
+
+  cidadania:
+    build: ./apps/cidadania
+    container_name: ava-cidadania
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${CIDADANIA_PORT:-8085}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ava}:${POSTGRES_PASSWORD:-ava}@postgres:5432/${POSTGRES_DB:-ava}
+      PAPERLESS_URL: ${PAPERLESS_URL:-http://localhost:8000}
+      PAPERLESS_TOKEN: ${PAPERLESS_TOKEN:-}
+    networks:
+      - default
+
+  hub:
+    build: ./apps/hub
+    container_name: ava-hub
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${HUB_PORT:-8088}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ava}:${POSTGRES_PASSWORD:-ava}@postgres:5432/${POSTGRES_DB:-ava}
+      PAPERLESS_URL: ${PAPERLESS_URL:-http://localhost:8000}
+      PAPERLESS_TOKEN: ${PAPERLESS_TOKEN:-}
+      OLLAMA_URL: ${OLLAMA_URL:-http://localhost:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:14b}
+      GOOGLE_CALENDAR_ICAL_URL: ${GOOGLE_CALENDAR_ICAL_URL:-}
+      AVA_PIN_ADMIN: ${AVA_PIN_ADMIN:-1234}
+      AVA_PIN_MEMBER: ${AVA_PIN_MEMBER:-5678}
+      AVA_USER_ADMIN: ${AVA_USER_ADMIN:-Alex}
+      AVA_USER_MEMBER: ${AVA_USER_MEMBER:-Sam}
+      AVA_DEVICE_TOKEN: ${AVA_DEVICE_TOKEN:-ava-mobile-device-token}
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge

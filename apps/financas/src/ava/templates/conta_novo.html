@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Nova conta{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-6">Nova conta</h1>
+<div class="card max-w-lg">
+  <form method="post" action="/contas/novo" class="space-y-4">
+    <label class="block text-sm">Titular
+      <select name="titular_id" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+        {% for titular in titulares %}
+        <option value="{{ titular.id }}">{{ titular.nome }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="block text-sm">Instituição
+      <input type="text" name="instituicao" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    <label class="block text-sm">Tipo
+      <select name="tipo" id="tipo" required onchange="atualizarCategorias()" class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+        <option value="a_ordem">Conta à ordem</option>
+        <option value="poupanca">Poupança</option>
+        <option value="investimento">Investimento</option>
+        <option value="certificados">Certificados</option>
+        <option value="divida">Dívida</option>
+        <option value="cartao_refeicao">Cartão de refeição</option>
+      </select>
+    </label>
+    <div id="campo_categoria_divida" style="display: none;">
+      <label class="block text-sm">Categoria de crédito
+        <select name="categoria_divida" id="categoria_divida" class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+          <option value="">-- não aplicável --</option>
+          <option value="habitacao">Habitação</option>
+          <option value="pessoal">Pessoal</option>
+          <option value="automovel">Automóvel</option>
+          <option value="cartao">Cartão de crédito</option>
+          <option value="obras">Obras</option>
+          <option value="consolidado">Consolidado</option>
+          <option value="outro">Outro</option>
+        </select>
+      </label>
+    </div>
+    <div id="campo_categoria_investimento" style="display: none;">
+      <label class="block text-sm">Categoria de investimento
+        <select name="categoria_investimento" id="categoria_investimento" class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+          <option value="">-- não aplicável --</option>
+          <option value="ppr">PPR</option>
+          <option value="etf">ETF</option>
+          <option value="acoes">Ações</option>
+          <option value="obrigacoes">Obrigações</option>
+          <option value="outro">Outro</option>
+        </select>
+      </label>
+    </div>
+    <label class="block text-sm">Nome (usado para reconhecer esta conta em despesas e reconciliação)
+      <input type="text" name="nome" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    <button type="submit" class="btn-primary">Save</button>
+  </form>
+</div>
+<script>
+  function atualizarCategorias() {
+    var tipo = document.getElementById("tipo").value;
+    var campoDivida = document.getElementById("campo_categoria_divida");
+    var campoInvestimento = document.getElementById("campo_categoria_investimento");
+    campoDivida.style.display = (tipo === "divida") ? "block" : "none";
+    campoInvestimento.style.display = (tipo === "investimento") ? "block" : "none";
+    if (tipo !== "divida") document.getElementById("categoria_divida").value = "";
+    if (tipo !== "investimento") document.getElementById("categoria_investimento").value = "";
+  }
+</script>
+{% endblock %}

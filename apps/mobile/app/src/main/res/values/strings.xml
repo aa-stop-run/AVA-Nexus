@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">AVA</string>
+    <string name="health_permissions_rationale">A AVA necessita de aceder aos teus dados de sono, passos e frequência cardíaca do Health Connect (Membersung Galaxy Watch) para enriquecer o teu briefing diário pessoal e monitorizar a tua recuperação.</string>
+</resources>

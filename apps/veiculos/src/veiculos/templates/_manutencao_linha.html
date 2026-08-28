@@ -1,0 +1,12 @@
+<tr class="hover:bg-surface-alt/50 transition-colors">
+  <td class="px-4 py-3 text-xs text-muted font-mono">{{ m.data.strftime('%d/%m/%Y') }}</td>
+  <td class="px-4 py-3 font-mono font-medium text-ink">{{ m.km | format_pt }} km</td>
+  <td class="px-4 py-3">
+    <span class="px-2 py-0.5 text-[11px] font-semibold bg-accent/10 text-accent rounded capitalize">
+      {{ m.tipo_servico.replace('_', ' ') }}
+    </span>
+  </td>
+  <td class="px-4 py-3 text-ink">{{ m.descricao }}</td>
+  <td class="px-4 py-3 text-xs text-muted">{{ m.oficina or '—' }}</td>
+  <td class="px-4 py-3 text-right font-bold text-ink">{{ m.custo | format_pt }} €</td>
+</tr>

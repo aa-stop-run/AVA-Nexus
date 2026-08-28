@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+{% block title %}Início{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6 dashboard-header">
+  <div class="flex items-center gap-4">
+    <h1 class="m-0">Dashboard</h1>
+    <div class="period-pill">
+      <a href="/?periodo={{ periodo_anterior }}" title="Mês anterior">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" /></svg>
+      </a>
+      <span>{{ periodo }}</span>
+      <a href="/?periodo={{ periodo_seguinte }}" title="Mês seguinte">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+      </a>
+    </div>
+  </div>
+  <div class="flex items-center gap-3 dashboard-header-actions">
+    {% if not esta_no_mes_atual %}
+    <a href="/" class="btn-primary" style="font-size: 12px; padding: 6px 12px; opacity: 0.8; background-color: var(--c-surface); color: var(--c-text); border: 1px solid var(--c-border);">Mês atual</a>
+    {% endif %}
+    {% if cartoes_refeicao %}
+    <div class="flex gap-2">
+      {% for cr in cartoes_refeicao %}
+      <a href="/registo?conta_id={{ cr.id }}&tipo=despesa" class="btn-primary" style="font-size: 12px; padding: 6px 10px; background-color: var(--c-surface); color: var(--c-text); border: 1px solid var(--c-border); display: flex; align-items: center; gap: 4px; text-decoration: none;" title="Registar Despesa">
+        ☕ {{ cr.nome.replace('Cartão Refeição - ', '') }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <a href="/registo" class="btn-primary" style="font-size: 13px; padding: 7px 14px; background-color: var(--c-accent); color: white; display: flex; align-items: center; gap: 6px; text-decoration: none;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width: 16px; height: 16px;">
+        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+      </svg>
+      Novo Registo
+    </a>
+  </div>
+</div>
+
+<div class="kpi-grid kpi-grid-hero">
+  <div class="kpi-card accent">
+    <div class="kpi-label">Saldo Atual {% if nome_conta_principal %}<span class="text-[11px] font-normal text-muted opacity-80 font-sans">({{ nome_conta_principal.split(' Nº:')[0] }})</span>{% endif %}</div>
+    <div class="kpi-value accent">{{ saldo_conta_principal | format_pt }} €</div>
+    <div class="kpi-sub">Liquidez total: {{ liquidez_atual | format_pt }} €</div>
+  </div>
+
+  {% set balanco = total_rendimentos - total_saidas %}
+  <div class="kpi-card {% if balanco >= 0 %}positive{% else %}negative{% endif %}">
+    <div class="kpi-label">Margem Mensal</div>
+    <div class="kpi-value {% if balanco >= 0 %}positive{% else %}negative{% endif %}">
+      {% if balanco > 0 %}+{% endif %}{{ balanco | format_pt }} €
+    </div>
+    {% if total_rendimentos > 0 %}
+    <div class="kpi-sub">Taxa de poupança: {{ "%.1f"|format((balanco / total_rendimentos) * 100) }}%</div>
+    {% else %}
+    <div class="kpi-sub">Rendimentos - Saídas</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="kpi-grid kpi-grid-secundaria">
+  <div class="kpi-card-mini blue">
+    <div class="kpi-label">Património Total</div>
+    <div class="kpi-value blue">{{ patrimonio_atual | format_pt }} €</div>
+    <div class="kpi-sub text-[11px] text-muted">Inclui {{ total_bens_atual | format_pt }} € em bens a valor estimado</div>
+  </div>
+  <div class="kpi-card-mini positive">
+    <div class="kpi-label">Rendimentos</div>
+    <div class="kpi-value positive">{{ total_rendimentos | format_pt }} €</div>
+    <div class="kpi-sub">Este mês</div>
+  </div>
+  <div class="kpi-card-mini negative">
+    <div class="kpi-label">Despesas</div>
+    <div class="kpi-value negative">{{ total_despesas | format_pt }} €</div>
+    <div class="kpi-sub">Este mês</div>
+  </div>
+</div>
+
+<div class="card mb-5">
+  <div class="section-header">
+    <h2 class="section-title">Este mês</h2>
+  </div>
+  <div class="space-y-1">
+    <div class="info-row"><span class="info-row-label">Rendimentos</span><span class="info-row-value">{{ total_rendimentos | format_pt }} €</span></div>
+    <div class="info-row"><span class="info-row-label">Despesas</span><span class="info-row-value">{{ total_despesas | format_pt }} €</span></div>
+    <div class="info-row"><span class="info-row-label">Transferências</span><span class="info-row-value">{{ total_transferencias | format_pt }} €</span></div>
+    <div class="info-row"><span class="info-row-label" style="font-weight:600;">Saídas Totais</span><span class="info-row-value" style="font-weight:600;">{{ total_saidas | format_pt }} €</span></div>
+  </div>
+  <div style="border-top: 1px solid var(--c-border); margin: 10px 0;"></div>
+  <div class="info-row">
+    <span class="info-row-label" style="font-weight:600;">Margem bruta</span>
+    <span class="info-row-value" style="font-size: 1.05rem; color: {% if balanco >= 0 %}var(--c-positive){% else %}var(--c-negative){% endif %};">
+      {% if balanco > 0 %}+{% endif %}{{ balanco | format_pt }} €
+    </span>
+  </div>
+
+  <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--c-border);">
+    <div class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--c-blue);">
+      Margem estrutural — rendimento fiável vs. compromissos
+    </div>
+    <div class="space-y-1 mt-2">
+      <div class="info-row"><span class="info-row-label">Rendimento recorrente</span><span class="info-row-value">{{ margem.rendimento_recorrente | format_pt }} €</span></div>
+      <div class="info-row"><span class="info-row-label">− Despesa fixa</span><span class="info-row-value">{{ margem.despesa_fixa | format_pt }} €</span></div>
+      <div class="info-row"><span class="info-row-label">− Despesa variável</span><span class="info-row-value">{{ margem.despesa_variavel | format_pt }} €</span></div>
+      <div class="info-row"><span class="info-row-label">− Serviço da dívida</span><span class="info-row-value">{{ margem.servico_divida | format_pt }} €</span></div>
+    </div>
+    <div class="info-row" style="margin-top: 8px;">
+      <span class="info-row-label" style="font-weight:600;">Margem estrutural</span>
+      <span class="info-row-value" style="font-size: 1.05rem; color: {% if margem.margem >= 0 %}var(--c-positive){% else %}var(--c-negative){% endif %};">
+        {% if margem.margem > 0 %}+{% endif %}{{ margem.margem | format_pt }} €
+      </span>
+    </div>
+    {% if margem.poupanca %}
+    <div class="text-[11px] text-muted mt-1">Poupança do mês: {{ margem.poupanca | format_pt }} €</div>
+    {% endif %}
+  </div>
+</div>
+
+{% set has_right_col = proximas_obrigacoes %}
+<div class="dashboard-grid {% if not has_right_col %}single-col{% endif %}">
+  <div class="dashboard-col-left">
+
+    <div class="card mb-5">
+      <div class="section-header">
+        <h2 class="section-title">Despesas por categoria</h2>
+      </div>
+      <p class="text-muted text-xs">
+        Inclui amortizações e transferências, ao contrário da margem estrutural acima — são duas
+        perguntas diferentes sobre os mesmos movimentos.
+      </p>
+
+      {% if despesas_por_grupo %}
+      <div class="mb-6">
+         <div class="chart-container" style="height: 180px;">
+           <canvas id="grafico-despesas-grupos"></canvas>
+         </div>
+      </div>
+      
+      <div class="space-y-3">
+        {% for entrada in despesas_por_grupo %}
+        <details class="group-details" open>
+          <summary class="py-2 cursor-pointer border-b border-border-light outline-none" style="user-select: none;">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-[12px] font-bold uppercase text-muted tracking-wider">{{ entrada.grupo.nome }}</span>
+              <span class="text-sm font-bold text-ink">
+                {{ entrada.total | format_pt }} €
+                {% if entrada.limite_mensal %}
+                  <span class="text-muted text-xs font-normal ml-1">/ {{ entrada.limite_mensal | format_pt }} €</span>
+                {% endif %}
+              </span>
+            </div>
+            {% if entrada.limite_mensal %}
+            <div class="flex items-center gap-3 mt-2">
+              <div class="flex-1 bg-border rounded-full h-2.5 overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500 {% if entrada.percent_orcamento > 100 %} bg-negative {% elif entrada.percent_orcamento > 90 %} bg-warning {% else %} bg-positive {% endif %}" style="width: {{ (entrada.percent_orcamento if entrada.percent_orcamento <= 100 else 100)|string|replace(',', '.') }}%"></div>
+              </div>
+              <span class="text-xs font-bold {% if entrada.percent_orcamento > 100 %} text-negative {% elif entrada.percent_orcamento > 90 %} text-warning {% else %} text-positive {% endif %} w-10 text-right">
+                {% if entrada.percent_orcamento > 100 %}
+                  +{{ "%.0f"|format(entrada.percent_orcamento - 100) }}%
+                {% else %}
+                  {{ "%.0f"|format(entrada.percent_orcamento) }}%
+                {% endif %}
+              </span>
+            </div>
+            {% endif %}
+          </summary>
+          <div class="pt-3 pl-2 pb-2 space-y-4">
+            {% for item in entrada.categorias %}
+            <details class="categoria-details"
+                      hx-get="/categorias/{{ item.categoria.id }}/movimentos?periodo={{ periodo }}"
+                      hx-trigger="toggle once" hx-target="find .categoria-movimentos" hx-swap="innerHTML">
+              <summary class="progress-bar-wrap">
+                <div class="progress-dot" style="background-color: {{ item.cor }}"></div>
+                <div class="progress-label" title="{{ item.categoria.nome }}">{{ item.categoria.nome }}</div>
+                <div class="progress-track">
+                  <div class="progress-fill" style="width: {{ item.percent }}%; background-color: {{ item.cor }}"></div>
+                </div>
+                <div class="progress-pct">{{ "%.0f"|format(item.percent) }}%</div>
+                <div class="progress-amount">{{ item.total | format_pt }} €</div>
+                <div class="categoria-chevron">›</div>
+              </summary>
+              <div class="categoria-movimentos">
+                <p class="text-muted text-xs">A carregar…</p>
+              </div>
+            </details>
+            {% endfor %}
+          </div>
+        </details>
+        {% endfor %}
+      </div>
+      {% else %}
+        <p class="text-muted text-sm py-4">Sem despesas categorizadas neste período.</p>
+      {% endif %}
+    </div>
+
+  </div>
+
+  {% if has_right_col %}
+  <div class="dashboard-col-right">
+
+    {% if proximas_obrigacoes %}
+    <div class="card mb-5">
+      <div class="section-header">
+        <h2 class="section-title">Próximos prazos</h2>
+        <span class="section-badge">{{ proximas_obrigacoes|length }}</span>
+      </div>
+      <div class="space-y-2 mt-3">
+        {% for item in proximas_obrigacoes %}
+        <div class="flex items-center gap-3 p-2.5 rounded-lg border border-border-light bg-bg/50">
+          <div class="w-10 h-10 rounded-full flex-shrink-0 bg-warning/10 text-warning flex items-center justify-center font-bold text-[11px]">
+            {{ item.dias_restantes }}d
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-sm truncate">{{ item.obrigacao.descricao }}</div>
+            <div class="text-[11px] text-muted mt-0.5">Vence em {{ item.dias_restantes }} dias</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+</div>
+
+<div class="card mt-8">
+  <div class="section-header">
+    <h2 class="section-title">Rendimentos</h2>
+    {% if rendimentos_com_natureza %}
+    <div class="flex gap-1" id="rendimentos-filtro">
+      <button type="button" class="filtro-pill is-ativo" data-natureza="todos">Todos</button>
+      <button type="button" class="filtro-pill" data-natureza="ordinaria">Ordinária</button>
+      <button type="button" class="filtro-pill" data-natureza="extraordinaria">Extraordinária</button>
+    </div>
+    {% endif %}
+  </div>
+  <p class="text-muted text-xs">
+    Extraordinária: fora da margem estrutural, não se pode contar com ela todos os meses —
+    adiantamentos de cartão são dívida contraída, não entrada.
+  </p>
+
+  {% if rendimentos_com_natureza %}
+  <table class="table-clean" id="tabela-rendimentos">
+    <thead><tr><th>Grupo</th><th>Categoria</th><th>Natureza</th><th class="text-right">Total</th></tr></thead>
+    <tbody>
+      {% for r in rendimentos_com_natureza %}
+      <tr class="table-row-interactive" data-natureza="{{ 'extraordinaria' if r.extraordinaria else 'ordinaria' }}">
+        <td class="text-muted">{{ r.grupo }}</td>
+        <td>{{ r.categoria }}</td>
+        <td>
+          {% if r.extraordinaria %}
+          <span class="section-badge section-badge-extraordinaria">Extraordinária</span>
+          {% else %}
+          <span class="section-badge">Ordinária</span>
+          {% endif %}
+        </td>
+        <td class="text-right tabular-nums font-medium text-positive">{{ r.total | format_pt }} €</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <script>
+    (function () {
+      const botoes = document.querySelectorAll('#rendimentos-filtro .filtro-pill');
+      const linhas = document.querySelectorAll('#tabela-rendimentos tbody tr');
+      botoes.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          botoes.forEach(function (b) { b.classList.remove('is-ativo'); });
+          btn.classList.add('is-ativo');
+          const alvo = btn.dataset.natureza;
+          linhas.forEach(function (tr) {
+            tr.style.display = (alvo === 'todos' || tr.dataset.natureza === alvo) ? '' : 'none';
+          });
+        });
+      });
+    })();
+  </script>
+  {% else %}
+  <p class="text-muted text-sm">Sem rendimentos categorizados neste período.</p>
+  {% endif %}
+</div>
+
+{% if insights_resumo %}
+<div class="card mt-8">
+  <div class="section-header">
+    <h2 class="section-title">Insights</h2>
+    <span class="section-badge">{{ total_insights }}</span>
+  </div>
+  <div class="mt-3">
+    {% for insight in insights_resumo %}
+    <div class="insight-linha tom-{{ insight.tom }}">
+      <div>
+        <div class="text-sm font-medium">
+          {% if insight.link %}<a href="{{ insight.link }}" class="hover:underline">{{ insight.titulo }}</a>{% else %}{{ insight.titulo }}{% endif %}
+        </div>
+        <div class="text-xs text-muted">{{ insight.descricao }}</div>
+      </div>
+      {% if insight.valor %}<div class="text-sm font-bold">{{ insight.valor }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <a href="/insights?periodo={{ periodo }}" class="text-[13px] text-muted hover:text-ink font-medium transition-colors mt-2 inline-block">Ver todos →</a>
+</div>
+{% endif %}
+
+{% if metas_progressos %}
+<div class="card mt-8">
+  <div class="section-header">
+    <div class="flex items-center gap-2">
+      <h2 class="section-title">Metas de Poupança</h2>
+      <span class="section-badge">{{ metas_progressos|length }}</span>
+    </div>
+    <a href="/metas" class="text-xs text-muted hover:text-ink font-medium">Gerir metas →</a>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+    {% for p in metas_progressos[:3] %}
+    <div class="p-3.5 bg-surface-alt rounded-lg border border-border-light flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-start gap-2 mb-1.5">
+          <span class="text-xs font-bold text-ink truncate">{{ p.meta.nome }}</span>
+          {% if p.concluida %}
+          <span class="text-[10px] font-bold text-positive shrink-0">✓ Concluída</span>
+          {% else %}
+          <span class="text-[10px] font-medium text-muted shrink-0">{{ p.percentagem | format_pt }}%</span>
+          {% endif %}
+        </div>
+        <div class="w-full h-1.5 bg-surface rounded-full overflow-hidden mb-2">
+          <div class="h-full {% if p.concluida %}bg-positive{% else %}bg-accent{% endif %}" style="width: {{ p.percentagem }}%;"></div>
+        </div>
+      </div>
+      <div class="flex justify-between items-center text-[11px] text-muted pt-1">
+        <span class="font-bold text-ink">{{ p.meta.valor_atual | format_pt }} €</span>
+        <span>Meta: {{ p.meta.valor_alvo | format_pt }} €</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<script>
+  // Gráfico Despesas Macro
+  {% if despesas_por_grupo %}
+  const estilo = getComputedStyle(document.documentElement);
+  const corAcento = estilo.getPropertyValue('--c-accent').trim();
+  const corGrelha = estilo.getPropertyValue('--c-border-light').trim();
+  const corTexto = estilo.getPropertyValue('--c-text-muted').trim();
+  const corTooltip = estilo.getPropertyValue('--c-text').trim();
+  // --c-text e --c-bg sao sempre opostos entre temas (texto escuro/fundo claro no tema
+  // claro, texto claro/fundo escuro no escuro) -- usar o par garante contraste legivel
+  // nos dois temas sem hardcodar uma cor fixa de tooltip.
+  const corFundoTooltip = estilo.getPropertyValue('--c-bg').trim();
+
+  const despesasLabels = [];
+  const despesasValores = [];
+  {% for entrada in despesas_por_grupo %}
+  despesasLabels.push("{{ entrada.grupo.nome }}");
+  despesasValores.push({{ entrada.total }});
+  {% endfor %}
+
+  new Chart(document.getElementById("grafico-despesas-grupos"), {
+    type: "bar",
+    data: {
+      labels: despesasLabels,
+      datasets: [{
+        label: "Despesas",
+        data: despesasValores,
+        backgroundColor: corAcento,
+        borderRadius: 4,
+        barPercentage: 0.6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: corTooltip,
+          titleColor: corFundoTooltip,
+          bodyColor: corFundoTooltip,
+          titleFont: { family: 'Inter', size: 13 },
+          bodyFont: { family: 'Inter', size: 14, weight: 'bold' },
+          displayColors: false,
+          callbacks: {
+            label: function(context) {
+              return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: corGrelha, drawBorder: false },
+          border: { display: false },
+          ticks: {
+            font: { family: 'Inter', size: 11 },
+            color: corTexto,
+            maxTicksLimit: 5,
+            callback: function(value) {
+              return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(value);
+            }
+          }
+        },
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            font: { family: 'Inter', size: 11 },
+            color: corTexto,
+          }
+        }
+      }
+    }
+  });
+  {% endif %}
+</script>
+{% endblock %}

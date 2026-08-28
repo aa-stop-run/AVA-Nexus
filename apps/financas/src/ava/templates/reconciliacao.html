@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Reconciliação{% endblock %}
+{% block content %}
+<h1 class="m-0 mb-8">Reconciliação</h1>
+
+<section class="card mb-8">
+  <div class="section-header mb-2"><h2 class="section-title text-[16px]">Janelas que não fecham</h2></div>
+  {% if divergencias %}
+  <div class="overflow-x-auto">
+  <table class="table-clean">
+    <thead>
+      <tr>
+        <th>Conta</th><th>Período</th><th>Banco</th><th>Razão</th><th>Diferença</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in divergencias %}
+      <tr>
+        <td class="text-ink">{{ d.conta.nome }}</td>
+        <td>{{ d.de.strftime("%d/%m/%Y") }} → {{ d.ate.strftime("%d/%m/%Y") }}</td>
+        <td>{{ d.declarado | format_pt }} €</td>
+        <td>{{ d.derivado | format_pt }} €</td>
+        <td>{{ d.diferenca | format_pt }} €</td>
+        <td>
+          <form method="post" action="/reconciliacao/dispensar" class="flex gap-2">
+            <input type="hidden" name="conta_id" value="{{ d.conta.id }}" />
+            <input type="hidden" name="data" value="{{ d.ate }}" />
+            <input type="hidden" name="valor" value="{{ d.diferenca }}" />
+            <input type="text" name="motivo" placeholder="Porquê?" class="border border-border rounded px-3 py-2 text-sm" />
+            <button type="submit" class="btn-primary">Dispensar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="text-muted">Tudo fecha. Todos os saldos declarados são explicados pelos movimentos.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="section-header mb-2"><h2 class="section-title text-[16px]">Movimentos que o banco nunca confirmou</h2></div>
+  <p class="text-sm text-muted">
+    Registaste-os, o extrato seguinte já passou, e não apareceram. Ou não aconteceram, ou estão
+    noutra conta.
+  </p>
+  {% if por_confirmar %}
+  <div class="overflow-x-auto">
+  <table class="table-clean">
+    <thead><tr><th>Data</th><th>Descrição</th><th>Valor</th></tr></thead>
+    <tbody>
+      {% for m in por_confirmar %}
+      <tr>
+        <td>{{ m.data.strftime("%d/%m/%Y") }}</td>
+        <td class="text-ink">{{ m.descricao }}</td>
+        <td>{{ m.valor | format_pt }} €</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="text-muted">Nenhum.</p>
+  {% endif %}
+</section>
+
+<section class="card mt-8">
+  <div class="section-header mb-2"><h2 class="section-title text-[16px]">Extratos importados recentemente</h2></div>
+  {% if importados %}
+  <div class="overflow-x-auto">
+  <table class="table-clean">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Conta</th>
+        <th class="text-right">Linhas criadas</th>
+        <th class="text-right">Já existiam</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for documento in importados %}
+        {% for entrada in documento.resumo_ingestao["contas"] %}
+        <tr>
+          <td>{{ documento.criado_em.strftime("%d/%m/%Y") }}</td>
+          <td class="text-ink">{{ entrada["conta"] }}</td>
+          <td class="text-right">{{ entrada["criadas"] }}</td>
+          <td class="text-right {% if entrada['saltadas'] %}text-muted{% endif %}">{{ entrada["saltadas"] }}</td>
+        </tr>
+        {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="text-muted text-xs mt-3">
+    "Já existiam" são linhas que o extrato trazia e que a base já tinha — o mesmo extrato a
+    chegar por dois caminhos, ou uma secção reaprovada. Saltá-las é o comportamento correto.
+  </p>
+  {% else %}
+  <p class="text-muted text-sm">Nenhum extrato importado nos últimos 30 dias.</p>
+  {% endif %}
+</section>
+{% endblock %}

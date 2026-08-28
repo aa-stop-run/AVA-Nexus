@@ -1,0 +1,15 @@
+<div class="flex justify-between items-center gap-3 py-1.5 border-b border-border-light" id="cat-mov-{{ m.movimento_id }}">
+  <div class="min-w-0">
+    <div class="text-xs text-muted">{{ m.data.strftime("%d/%m/%Y") }}</div>
+    <div class="text-sm truncate">{{ m.descricao }}</div>
+  </div>
+  <div class="flex items-center gap-2 shrink-0">
+    <span class="text-sm font-bold text-negative">{{ m.valor | format_pt }} €</span>
+    <button
+      hx-get="/movimentos/{{ m.movimento_id }}/trocar-categoria-form?categoria_id={{ categoria_id }}"
+      hx-target="#cat-mov-{{ m.movimento_id }}"
+      hx-swap="outerHTML"
+      class="btn-pill-muted text-xs"
+    >Trocar categoria</button>
+  </div>
+</div>

@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %}{{ ativo.nome }}{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <div class="flex items-center gap-2 text-sm text-muted mb-2">
+    <a href="/patrimonio" class="hover:text-ink transition-colors">Património</a>
+    <span>/</span>
+    <span>Ativo</span>
+  </div>
+  <h1 class="text-2xl font-semibold">{{ ativo.nome }}</h1>
+  <p class="text-sm text-muted capitalize">{{ ativo.tipo }}</p>
+</div>
+
+<div class="card mb-8">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <div>
+      <p class="stat-label">Valor Atual</p>
+      {% if avaliacao_atual %}
+      <p class="stat-value">{{ avaliacao_atual.valor | format_pt }} €</p>
+      <p class="text-xs text-muted">
+        {% if avaliacao_atual.e_projetado %}
+          estimado a partir da avaliação de {{ avaliacao_atual.data_observacao.strftime('%d/%m/%Y') }}
+        {% else %}
+          avaliado hoje
+        {% endif %}
+      </p>
+      {% else %}
+      <p class="stat-value text-muted">Sem avaliação</p>
+      {% endif %}
+    </div>
+    <div>
+      <p class="stat-label">Total Gasto (Geral)</p>
+      <p class="stat-value {% if total_gasto_geral > 0 %}text-negative{% endif %}">{{ total_gasto_geral | format_pt }} €</p>
+    </div>
+    {% if abastecimentos %}
+    <div>
+      <p class="stat-label">Total Gasto (Fuel Type)</p>
+      <p class="stat-value">{{ total_custo_abastecimentos | format_pt }} €</p>
+    </div>
+    <div>
+      <p class="stat-label">Consumo Médio</p>
+      {% if media_global_l_100km %}
+      <p class="stat-value">{{ media_global_l_100km | format_pt }} <span class="text-sm font-normal text-muted">L/100km</span></p>
+      {% else %}
+      <p class="text-sm text-muted mt-2">Dados insuficientes</p>
+      {% endif %}
+    </div>
+    <div>
+      <p class="stat-label">Custo Médio (Fuel Type)</p>
+      {% if media_global_c_100km %}
+      <p class="stat-value">{{ media_global_c_100km | format_pt }} <span class="text-sm font-normal text-muted">€/100km</span></p>
+      {% else %}
+      <p class="text-sm text-muted mt-2">Dados insuficientes</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% if dividas_do_bem %}
+  <div class="mt-4 pt-4 border-t border-border-light">
+    <p class="text-[11px] text-muted uppercase tracking-wider mb-2">Em dívida</p>
+    {% for item in dividas_do_bem %}
+    <div class="flex justify-between text-sm">
+      <span class="text-muted">{{ item.conta.nome }}</span>
+      <span class="tabular-nums text-negative">{{ item.em_divida | format_pt }} €</span>
+    </div>
+    {% endfor %}
+    {% if valor_liquido is not none %}
+    <div class="flex justify-between text-sm font-bold mt-2 pt-2 border-t border-border-light">
+      <span>Valor líquido</span>
+      <span class="tabular-nums {% if valor_liquido < 0 %}text-negative{% else %}text-positive{% endif %}">{{ valor_liquido | format_pt }} €</span>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<section class="card mb-6">
+  <h2 class="text-lg font-medium mb-3">Avaliações</h2>
+  <form method="post" action="/patrimonio/ativos/{{ ativo.id }}/avaliacao" class="flex gap-2 items-end mb-4">
+    <label class="text-sm">Data
+      <input type="date" name="data" required value="{{ hoje_iso }}"
+             class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    <label class="text-sm">Valor (€)
+      <input type="number" step="0.01" name="valor" required
+             class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    <button type="submit" class="btn-primary">Registar</button>
+  </form>
+
+  {% if historico_valor %}
+  <table class="w-full text-sm">
+    <tbody>
+      {% for avaliacao in historico_valor %}
+      <tr>
+        <td>{{ avaliacao.data.strftime('%d/%m/%Y') }}</td>
+        <td>{% if avaliacao.origem == 'aquisicao' %}Compra{% else %}Avaliação{% endif %}</td>
+        <td class="text-right tabular-nums">{{ avaliacao.valor | format_pt }} €</td>
+        <td class="text-right">
+          <form method="post"
+                action="/patrimonio/ativos/{{ ativo.id }}/avaliacao/{{ avaliacao.id }}/apagar">
+            <button type="submit" class="text-xs text-negative hover:underline">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-muted text-sm">Ainda não há nenhuma avaliação registada para este bem.</p>
+  {% endif %}
+
+  <form method="post" action="/patrimonio/ativos/{{ ativo.id }}/taxa"
+        class="flex gap-2 items-end mt-4 pt-4 border-t border-border-light">
+    <label class="text-sm">Taxa anual própria (%)
+      <input type="number" step="0.1" name="taxa_anual"
+             value="{{ (ativo.taxa_anual * 100) | round(1) if ativo.taxa_anual is not none else '' }}"
+             placeholder="{{ (taxa_omissao * 100) | round(1) }} (omissão para {{ ativo.tipo }})"
+             class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+      <span class="text-xs text-muted">Deixar vazio usa a omissão do tipo.</span>
+    </label>
+    <button type="submit" class="btn-secondary">Save</button>
+  </form>
+</section>
+
+{% if gastos_por_categoria %}
+<section class="mb-8">
+  <h2 class="text-lg font-medium mb-3">Custos por Categoria</h2>
+  <div class="card p-0 overflow-hidden">
+    <table class="table-clean m-0">
+      <thead>
+        <tr>
+          <th class="px-4">Categoria</th>
+          <th class="text-right px-4">Total Gasto</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat_nome, valor in gastos_por_categoria %}
+        <tr class="align-top hover:bg-page transition-colors">
+          <td class="px-4 font-medium">{{ cat_nome }}</td>
+          <td class="text-right tabular-nums px-4">{{ valor | format_pt }} €</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if outras_despesas %}
+<section class="mb-8">
+  <h2 class="text-lg font-medium mb-3">Histórico de Custos e Despesas</h2>
+  <div class="card p-0 overflow-hidden">
+    <table class="table-clean m-0">
+      <thead>
+        <tr>
+          <th class="px-4">Data</th>
+          <th class="px-4">Descrição</th>
+          <th class="px-4">Categoria</th>
+          <th class="text-right px-4">Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for despesa in outras_despesas %}
+        <tr class="align-top hover:bg-page transition-colors">
+          <td class="px-4">{{ despesa.data.strftime("%d/%m/%Y") }}</td>
+          <td class="px-4">{{ despesa.descricao }}</td>
+          <td class="px-4 text-muted">{{ despesa.categoria }}</td>
+          <td class="text-right tabular-nums px-4">{{ despesa.valor | format_pt }} €</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if abastecimentos %}
+<section>
+  <h2 class="text-lg font-medium mb-3">Histórico de Fuel Logs</h2>
+  <div class="card p-0 overflow-hidden">
+    <table class="table-clean m-0">
+      <thead>
+        <tr>
+          <th class="px-4">Data</th>
+          <th class="text-right px-4">Odómetro (Km)</th>
+          <th class="text-right px-4">Litros</th>
+          <th class="text-right px-4">Custo</th>
+          <th class="text-right px-4">Média L/100km</th>
+          <th class="text-right px-4">Média €/100km</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in abastecimentos %}
+        <tr class="align-top hover:bg-page transition-colors">
+          <td class="px-4">{{ a.data.strftime("%d/%m/%Y") }}</td>
+          <td class="text-right tabular-nums px-4">{{ a.odometro | format_pt }}</td>
+          <td class="text-right tabular-nums px-4">{{ a.litros | format_pt }} L</td>
+          <td class="text-right tabular-nums px-4">{{ a.custo | format_pt }} €</td>
+          <td class="text-right tabular-nums px-4">
+            {% if a.l_100km %}
+              {{ a.l_100km | format_pt }} L
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td class="text-right tabular-nums px-4">
+            {% if a.c_100km %}
+              {{ a.c_100km | format_pt }} €
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if not media_global_l_100km %}
+    <p class="text-sm text-muted p-4 border-t border-border bg-page">
+      Nota: As médias por 100km apenas começam a ser calculadas a partir do segundo abastecimento registado com a quilometragem. Para resultados exatos, assume-se atesto completo (full-to-full).
+    </p>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section class="card mb-6">
+  <div class="flex justify-between items-center mb-3">
+    <h2 class="text-lg font-medium m-0">Contratos, Seguros & Warranties</h2>
+    <a href="/contratos/novo?ativo_id={{ ativo.id }}" class="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+      Add Seguro / Garantia
+    </a>
+  </div>
+
+  {% if contratos_do_bem %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left text-muted text-xs border-b border-border">
+          <th class="pb-2 font-medium">Designação / Policy No.</th>
+          <th class="pb-2 font-medium">Tipo</th>
+          <th class="pb-2 font-medium">Data Início</th>
+          <th class="pb-2 font-medium">Data Término / Renovação</th>
+          <th class="pb-2 font-medium text-right">Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in contratos_do_bem %}
+        <tr class="border-b border-border-light hover:bg-page transition-colors">
+          <td class="py-2.5">
+            <div class="font-medium text-text">{{ c.nome }}</div>
+            {% if c.numero_referencia %}<div class="text-xs text-muted">Ref: {{ c.numero_referencia }}</div>{% endif %}
+          </td>
+          <td class="py-2.5">
+            <span class="badge badge-neutral text-xs">{{ tipo_labels.get(c.tipo, c.tipo) }}</span>
+          </td>
+          <td class="py-2.5">{{ c.data_inicio.strftime('%d/%m/%Y') }}</td>
+          <td class="py-2.5">
+            {% if c.data_fim %}
+              {% set dias = (c.data_fim - hoje).days %}
+              <div class="font-medium {% if dias <= 30 %}text-negative font-bold{% endif %}">
+                {{ c.data_fim.strftime('%d/%m/%Y') }}
+              </div>
+              <div class="text-[11px] text-muted">
+                {% if dias < 0 %}Expirou há {{ -dias }} dias{% elif dias == 0 %}Hoje{% else %}Em {{ dias }} dias{% endif %}
+              </div>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="py-2.5 text-right font-medium">
+            {% if c.valor %}
+              {{ c.valor | format_pt }} € <span class="text-xs text-muted font-normal">({{ c.periodicidade }})</span>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-sm text-muted py-4 text-center">
+    Nenhum seguro ou garantia associado a este bem. Clica no botão acima para registar a apólice ou a garantia de compra.
+  </p>
+  {% endif %}
+</section>
+{% endblock %}

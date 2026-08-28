@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+:root {
+  --bg-space: #07090e;
+  --c-card: rgba(15, 23, 42, 0.75);
+  --c-border: rgba(255, 255, 255, 0.08);
+  --c-accent: #38bdf8;
+}

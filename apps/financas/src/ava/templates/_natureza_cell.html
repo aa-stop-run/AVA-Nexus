@@ -1,0 +1,19 @@
+<span id="natureza-{{ categoria.id }}" class="inline-flex items-center gap-1">
+  <span
+    class="text-xs font-medium px-3 py-1.5 rounded-full whitespace-nowrap
+      {% if categoria.tipo == 'despesa' %}bg-negative/10 text-negative{% else %}bg-positive/10 text-positive{% endif %}"
+  >{{ categoria.nome }}</span>
+  <select
+    name="natureza"
+    class="text-xs border border-border rounded px-2 py-1"
+    hx-post="/configuracoes/categorias/{{ categoria.id }}/natureza"
+    hx-target="#natureza-{{ categoria.id }}"
+    hx-swap="outerHTML"
+  >
+    {% for valor in naturezas_de(categoria.tipo) %}
+    <option value="{{ valor }}" {% if valor == categoria.natureza %}selected{% endif %}>
+      {{ etiquetas_natureza[valor] }}
+    </option>
+    {% endfor %}
+  </select>
+</span>

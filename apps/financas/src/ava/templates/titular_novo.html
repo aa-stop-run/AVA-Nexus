@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Novo titular{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-6">Novo titular</h1>
+{% if erro %}<p class="text-negative text-sm mb-4">{{ erro }}</p>{% endif %}
+<div class="card max-w-lg">
+  <form method="post" action="/titulares/novo" class="space-y-4">
+    <label class="block text-sm">Nome
+      <input type="text" name="nome" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    <label class="block text-sm">Tipo
+      <select name="tipo" required class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+        <option value="proprio">Próprio</option>
+        <option value="conjuge">Cônjuge</option>
+        <option value="filho">Filho</option>
+        <option value="conjunto">Conjunto / Partilhado</option>
+      </select>
+    </label>
+    <label class="block text-sm">Data de nascimento (opcional)
+      <input type="date" name="data_nascimento" class="w-full border border-border rounded px-3 py-2 text-sm mt-1">
+    </label>
+    <button type="submit" class="btn-primary">Save</button>
+  </form>
+</div>
+{% endblock %}

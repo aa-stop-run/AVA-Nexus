@@ -1,0 +1,27 @@
+<div class="py-2 px-2.5 bg-surface-alt rounded-md border border-border-light my-1" id="cat-mov-{{ m.movimento_id }}">
+  <div class="flex items-center justify-between gap-2 mb-1.5">
+    <span class="text-xs text-muted">{{ m.data.strftime("%d/%m/%Y") }} — <strong class="text-ink truncate">{{ m.descricao }}</strong></span>
+    <span class="text-xs font-bold text-negative shrink-0">{{ m.valor | format_pt }} €</span>
+  </div>
+  <form hx-post="/movimentos/{{ m.movimento_id }}/trocar-categoria"
+        hx-target="#cat-mov-{{ m.movimento_id }}"
+        hx-swap="outerHTML"
+        class="flex items-center gap-2">
+    <select name="nova_categoria_id" class="select-clean text-xs flex-1" required>
+      <option value="" disabled>Escolher nova categoria…</option>
+      {% for cat_grupo, categorias in categorias_despesa %}
+      <optgroup label="{{ cat_grupo.nome }}">
+        {% for cat in categorias %}
+        <option value="{{ cat.id }}" {% if categoria_id and cat.id|string == categoria_id|string %}selected{% endif %}>{{ cat.nome }}</option>
+        {% endfor %}
+      </optgroup>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn-pill-positive text-xs shrink-0">Save</button>
+    <button type="button"
+            hx-get="/movimentos/{{ m.movimento_id }}/linha-categoria?categoria_id={{ categoria_id }}"
+            hx-target="#cat-mov-{{ m.movimento_id }}"
+            hx-swap="outerHTML"
+            class="btn-pill-muted text-xs shrink-0">Cancel</button>
+  </form>
+</div>

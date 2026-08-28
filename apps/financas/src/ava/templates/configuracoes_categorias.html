@@ -1,0 +1,72 @@
+{% extends "configuracoes_layout.html" %}
+{% block title %}Categorias{% endblock %}
+{% block config_content %}
+{% if erro %}<p class="text-negative text-sm mb-4">{{ erro }}</p>{% endif %}
+
+{% from "_cartao_registo.html" import cartao %}
+<div class="space-y-3 mb-6">
+  {% call cartao(titulo="Novo grupo") %}
+  <form method="post" action="/configuracoes/grupos" class="cartao-registo-campos">
+    <label class="cartao-registo-campo">
+      <span>Nome do grupo</span>
+      <input type="text" name="nome" required placeholder="Nome do grupo" class="select-clean" style="width:100%;">
+    </label>
+    <div class="cartao-registo-acoes" style="grid-column: 1/-1;">
+      <button type="submit" class="btn-primary">Criar</button>
+    </div>
+  </form>
+  {% endcall %}
+
+  {% call cartao(titulo="Nova categoria") %}
+  <form method="post" action="/configuracoes/categorias" class="cartao-registo-campos">
+    <label class="cartao-registo-campo">
+      <span>Grupo</span>
+      <select name="grupo_id" required class="select-clean" style="width:100%;">
+        {% for grupo, _ in grupos %}
+        <option value="{{ grupo.id }}">{{ grupo.nome }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="cartao-registo-campo">
+      <span>Tipo</span>
+      <select name="tipo" required class="select-clean" style="width:100%;">
+        <option value="despesa">Despesa</option>
+        <option value="receita">Receita</option>
+      </select>
+    </label>
+    <label class="cartao-registo-campo">
+      <span>Natureza</span>
+      <select name="natureza" required class="select-clean" style="width:100%;">
+        <option value="variavel">Variável</option>
+        <option value="fixa">Fixa</option>
+        <option value="poupanca">Poupança</option>
+        <option value="extraordinario">Extraordinário</option>
+        <option value="recorrente">Recorrente</option>
+      </select>
+    </label>
+    <label class="cartao-registo-campo" style="grid-column: 1/-1;">
+      <span>Nome da categoria</span>
+      <input type="text" name="nome" required placeholder="Nome da categoria" class="select-clean" style="width:100%;">
+    </label>
+    <div class="cartao-registo-acoes" style="grid-column: 1/-1;">
+      <button type="submit" class="btn-primary">Criar</button>
+    </div>
+  </form>
+  {% endcall %}
+</div>
+
+{% for grupo, categorias in grupos %}
+<div class="card mb-3">
+  <p class="font-medium mb-2">{{ grupo.nome }}</p>
+  {% if categorias %}
+  <div class="flex flex-wrap gap-3">
+    {% for categoria in categorias %}
+    {% include "_natureza_cell.html" %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-muted text-sm">Sem categorias ainda.</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

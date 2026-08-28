@@ -1,0 +1,17 @@
+{% macro cartao(titulo, meta="", valor=None, valor_classe="", sub_valor="", id_attr="") %}
+<div class="cartao-registo" {% if id_attr %}id="{{ id_attr }}"{% endif %}>
+  <div class="cartao-registo-cabecalho">
+    <div class="cartao-registo-primario">
+      <div class="cartao-registo-titulo">{{ titulo }}</div>
+      {% if meta %}<div class="cartao-registo-meta">{{ meta }}</div>{% endif %}
+    </div>
+    {% if valor is not none %}
+    <div>
+      <div class="cartao-registo-valor {{ valor_classe }}">{{ valor }}</div>
+      {% if sub_valor %}<div class="cartao-registo-sub-valor">{{ sub_valor }}</div>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {{ caller() }}
+</div>
+{% endmacro %}

@@ -1,0 +1,9 @@
+{% if movimentos %}
+<div class="space-y-2">
+  {% for m in movimentos %}
+  {% include "_categoria_movimento_item.html" %}
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted text-xs py-2">Sem despesas nesta categoria.</p>
+{% endif %}

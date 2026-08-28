@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Prazos & Obrigações{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-8">
+  <div>
+    <h1 class="m-0">Prazos & Obrigações</h1>
+    <p class="text-sm text-muted mt-1">Acompanhamento de impostos, inspeções de viaturas, apólices de seguros e garantias legais</p>
+  </div>
+  <div class="flex gap-2">
+    <a href="/contratos/novo" class="btn-primary flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+      Novo Contrato / Garantia
+    </a>
+  </div>
+</div>
+
+<!-- SEÇÃO 1: OBRIGAÇÕES LEGAIS (IUC, INSPEÇÃO, IMPOSTOS) -->
+<div class="card mb-8">
+  <div class="section-header mb-4">
+    <h2 class="section-title text-[18px]">Obrigações e Impostos</h2>
+    <p class="text-xs text-muted">IUC, Inspeções Periódicas Obrigatórias e prazos fiscais</p>
+  </div>
+
+  {% if obrigacoes %}
+  <div class="overflow-x-auto">
+    <table class="table w-full text-sm">
+      <thead>
+        <tr>
+          <th>Descrição</th>
+          <th>Tipo</th>
+          <th>Data Limite</th>
+          <th class="text-right">Dias Restantes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in obrigacoes %}
+        {% set o = item.obrigacao %}
+        <tr>
+          <td class="font-medium text-text">{{ o.descricao }}</td>
+          <td><span class="badge badge-neutral text-xs">{{ o.tipo }}</span></td>
+          <td>{{ o.data_limite.strftime('%d/%m/%Y') }}</td>
+          <td class="text-right">
+            {% if item.dias_restantes <= 7 %}
+              <span class="badge badge-negative text-xs font-bold">{{ item.dias_restantes }} dias (Urgente)</span>
+            {% elif item.dias_restantes <= 30 %}
+              <span class="badge badge-amber text-xs font-semibold">{{ item.dias_restantes }} dias</span>
+            {% else %}
+              <span class="badge badge-neutral text-xs">{{ item.dias_restantes }} dias</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="p-6 text-center text-muted">
+    Sem obrigações pendentes no momento.
+  </div>
+  {% endif %}
+</div>
+
+<!-- SEÇÃO 2: VENCIMENTOS DE CONTRATOS, SEGUROS E GARANTIAS -->
+<div class="card">
+  <div class="section-header flex justify-between items-center mb-4">
+    <div>
+      <h2 class="section-title text-[18px]">Próximos Vencimentos de Contratos, Seguros & Warranties</h2>
+      <p class="text-xs text-muted">Prazos de renovação, datas-limite de aviso prévio para cancelamento e termos de garantia (< 90 dias)</p>
+    </div>
+    <a href="/contratos" class="text-xs text-primary hover:underline">Ver todos os contratos &rarr;</a>
+  </div>
+
+  {% if vencimentos_contratos %}
+  <div class="overflow-x-auto">
+    <table class="table w-full text-sm">
+      <thead>
+        <tr>
+          <th>Contrato / Bem</th>
+          <th>Tipo</th>
+          <th>Data de Término / Renovação</th>
+          <th>Decisão de Aviso Prévio</th>
+          <th class="text-right">Dias Restantes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in vencimentos_contratos %}
+        {% set c = item.contrato %}
+        <tr>
+          <td>
+            <div class="font-medium text-text">{{ c.nome }}</div>
+            {% if c.numero_referencia %}<div class="text-xs text-muted">Ref: {{ c.numero_referencia }}</div>{% endif %}
+          </td>
+          <td><span class="badge badge-neutral text-xs">{{ tipo_labels.get(c.tipo, c.tipo) }}</span></td>
+          <td>{{ c.data_fim.strftime('%d/%m/%Y') }}</td>
+          <td>
+            <div class="text-xs {% if item.dias_para_decisao <= 15 %}text-negative font-bold{% endif %}">
+              Até {{ item.data_limite_decisao.strftime('%d/%m/%Y') }}
+            </div>
+            <div class="text-[11px] text-muted">({{ c.dias_aviso_previo }} dias antes)</div>
+          </td>
+          <td class="text-right">
+            {% if item.expirado %}
+              <span class="badge badge-negative text-xs">Expirado</span>
+            {% elif item.urgente %}
+              <span class="badge badge-negative text-xs font-bold">{{ item.dias_restantes }} dias</span>
+            {% elif item.dias_restantes <= 30 %}
+              <span class="badge badge-amber text-xs font-semibold">{{ item.dias_restantes }} dias</span>
+            {% else %}
+              <span class="badge badge-neutral text-xs">{{ item.dias_restantes }} dias</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="p-6 text-center text-muted">
+    Nenhum contrato, apólice ou garantia a expirar nos próximos 90 dias.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
